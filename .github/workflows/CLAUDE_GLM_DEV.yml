@@ -51,6 +51,9 @@ jobs:
           branch_prefix: ""
           branch_name_template: ${{ steps.branch.outputs.name }}
 
+          # ★追加：バリデーション通過用に必要
+          anthropic_api_key: ${{ secrets.CLAUDE_GLM_DEV_API_KEY }}
+
         env:
           # GLMに向ける設定
           ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic

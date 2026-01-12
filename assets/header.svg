@@ -1,44 +1,33 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300">
   <defs>
-    <!-- Unique cyber-aurora background gradient -->
+    <!-- Fashion palette background gradient -->
     <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0a0015;stop-opacity:1" />
-      <stop offset="30%" style="stop-color:#1a0a2e;stop-opacity:1" />
-      <stop offset="70%" style="stop-color:#0f1a3a;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0a0015;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#593A2E;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#3d261e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#593A2E;stop-opacity:1" />
     </linearGradient>
 
-    <!-- Aurora text gradient - green to cyan to magenta to orange -->
+    <!-- Fashion palette text gradient -->
     <linearGradient id="text-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#00ffa3;stop-opacity:1">
-        <animate attributeName="stop-color" values="#00ffa3;#00d4ff;#ff00ff;#ff6b00;#ffea00;#00ffa3" dur="8s" repeatCount="indefinite"/>
+      <stop offset="0%" style="stop-color:#9295A6;stop-opacity:1">
+        <animate attributeName="stop-color" values="#9295A6;#F2BC57;#F27329;#D9B4A7;#9295A6" dur="8s" repeatCount="indefinite"/>
       </stop>
-      <stop offset="25%" style="stop-color:#00d4ff;stop-opacity:1">
-        <animate attributeName="stop-color" values="#00d4ff;#ff00ff;#ff6b00;#ffea00;#00ffa3;#00d4ff" dur="8s" repeatCount="indefinite"/>
+      <stop offset="33%" style="stop-color:#F2BC57;stop-opacity:1">
+        <animate attributeName="stop-color" values="#F2BC57;#F27329;#D9B4A7;#9295A6;#F2BC57" dur="8s" repeatCount="indefinite"/>
       </stop>
-      <stop offset="50%" style="stop-color:#ff00ff;stop-opacity:1">
-        <animate attributeName="stop-color" values="#ff00ff;#ff6b00;#ffea00;#00ffa3;#00d4ff;#ff00ff" dur="8s" repeatCount="indefinite"/>
+      <stop offset="66%" style="stop-color:#F27329;stop-opacity:1">
+        <animate attributeName="stop-color" values="#F27329;#D9B4A7;#9295A6;#F2BC57;#F27329" dur="8s" repeatCount="indefinite"/>
       </stop>
-      <stop offset="75%" style="stop-color:#ff6b00;stop-opacity:1">
-        <animate attributeName="stop-color" values="#ff6b00;#ffea00;#00ffa3;#00d4ff;#ff00ff;#ff6b00" dur="8s" repeatCount="indefinite"/>
+      <stop offset="100%" style="stop-color:#D9B4A7;stop-opacity:1">
+        <animate attributeName="stop-color" values="#D9B4A7;#9295A6;#F2BC57;#F27329;#D9B4A7" dur="8s" repeatCount="indefinite"/>
       </stop>
-      <stop offset="100%" style="stop-color:#ffea00;stop-opacity:1">
-        <animate attributeName="stop-color" values="#ffea00;#00ffa3;#00d4ff;#ff00ff;#ff6b00;#ffea00" dur="8s" repeatCount="indefinite"/>
-      </stop>
-    </linearGradient>
-
-    <!-- Glow gradient -->
-    <linearGradient id="glow-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#00ffa3;stop-opacity:0.4" />
-      <stop offset="50%" style="stop-color:#ff00ff;stop-opacity:0.4" />
-      <stop offset="100%" style="stop-color:#ffea00;stop-opacity:0.4" />
     </linearGradient>
 
     <!-- Diagonal stripe gradient -->
     <linearGradient id="stripe-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#00ffa3;stop-opacity:0.05" />
-      <stop offset="50%" style="stop-color:#ff00ff;stop-opacity:0.05" />
-      <stop offset="100%" style="stop-color:#ffea00;stop-opacity:0.05" />
+      <stop offset="0%" style="stop-color:#9295A6;stop-opacity:0.08" />
+      <stop offset="50%" style="stop-color:#F2BC57;stop-opacity:0.08" />
+      <stop offset="100%" style="stop-color:#F27329;stop-opacity:0.08" />
     </linearGradient>
 
     <!-- Neon glow filter -->
@@ -66,7 +55,7 @@
 
     <!-- Grid pattern -->
     <pattern id="cyber-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#00ffa3" stroke-width="0.5" stroke-opacity="0.1"/>
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#F2BC57" stroke-width="0.5" stroke-opacity="0.1"/>
     </pattern>
 
     <!-- CSS Animations -->
@@ -78,11 +67,6 @@
       @keyframes rotateHex {
         0% { transform: rotate(0deg); transform-origin: center; }
         100% { transform: rotate(360deg); transform-origin: center; }
-      }
-      @keyframes floatLine {
-        0% { transform: translateX(-100px); opacity: 0; }
-        50% { opacity: 0.5; }
-        100% { transform: translateX(1300px); opacity: 0; }
       }
       @keyframes scanline {
         0% { transform: translateY(-50px); opacity: 0; }
@@ -172,10 +156,10 @@
   </g>
 
   <!-- Glowing orbs with pulse animation -->
-  <circle cx="100" cy="80" r="4" fill="#00ffa3" filter="url(#intense-glow)" class="orb"/>
-  <circle cx="1100" cy="80" r="4" fill="#ffea00" filter="url(#intense-glow)" class="orb orb-delay-1"/>
-  <circle cx="100" cy="220" r="4" fill="#ff00ff" filter="url(#intense-glow)" class="orb orb-delay-2"/>
-  <circle cx="1100" cy="220" r="4" fill="#00d4ff" filter="url(#intense-glow)" class="orb orb-delay-3"/>
+  <circle cx="100" cy="80" r="4" fill="#9295A6" filter="url(#intense-glow)" class="orb"/>
+  <circle cx="1100" cy="80" r="4" fill="#D9B4A7" filter="url(#intense-glow)" class="orb orb-delay-1"/>
+  <circle cx="100" cy="220" r="4" fill="#F2BC57" filter="url(#intense-glow)" class="orb orb-delay-2"/>
+  <circle cx="1100" cy="220" r="4" fill="#F27329" filter="url(#intense-glow)" class="orb orb-delay-3"/>
 
   <!-- Horizontal scanline effect -->
   <rect class="scanline" x="0" y="0" width="1200" height="3" fill="url(#text-gradient)" opacity="0.3"/>
@@ -185,8 +169,8 @@
     <text x="600" y="150" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="url(#text-gradient)" text-anchor="middle" letter-spacing="2">claude glm actions lab</text>
   </g>
 
-  <!-- Subtitle with cyan color and subtle animation -->
-  <text x="600" y="200" font-family="Arial, sans-serif" font-size="22" fill="#00d4ff" text-anchor="middle" opacity="0.9">
+  <!-- Subtitle with fashion palette color -->
+  <text x="600" y="200" font-family="Arial, sans-serif" font-size="22" fill="#F2BC57" text-anchor="middle" opacity="0.9">
     Claude Code GitHub Actions with GLM API
     <animate attributeName="opacity" values="0.9;1;0.9" dur="4s" repeatCount="indefinite"/>
   </text>
@@ -202,15 +186,15 @@
       <animate attributeName="opacity" values="0.2;0.6;0.2" dur="5s" repeatCount="indefinite"/>
     </rect>
     <!-- Moving light particles on bottom line -->
-    <circle r="3" fill="#00ffa3" filter="url(#intense-glow)">
+    <circle r="3" fill="#9295A6" filter="url(#intense-glow)">
       <animateMotion dur="6s" repeatCount="indefinite" path="M 0,281 L 1200,281"/>
       <animate attributeName="opacity" values="0;1;1;0" dur="6s" repeatCount="indefinite"/>
     </circle>
-    <circle r="3" fill="#ff00ff" filter="url(#intense-glow)">
+    <circle r="3" fill="#F2BC57" filter="url(#intense-glow)">
       <animateMotion dur="8s" repeatCount="indefinite" path="M 0,281 L 1200,281" begin="2s"/>
       <animate attributeName="opacity" values="0;1;1;0" dur="8s" repeatCount="indefinite" begin="2s"/>
     </circle>
-    <circle r="3" fill="#ffea00" filter="url(#intense-glow)">
+    <circle r="3" fill="#F27329" filter="url(#intense-glow)">
       <animateMotion dur="7s" repeatCount="indefinite" path="M 0,281 L 1200,281" begin="4s"/>
       <animate attributeName="opacity" values="0;1;1;0" dur="7s" repeatCount="indefinite" begin="4s"/>
     </circle>

@@ -48,6 +48,7 @@ jobs:
           trigger_phrase: "@claude"
 
           # ★ブランチ名を固定（タイムスタンプなし）
+          branch_prefix: ""
           branch_name_template: "claude-glm-dev-issue-1"
 
           # ★追加：バリデーション通過用に必要

@@ -67,7 +67,7 @@ jobs:
       - name: Create PR (if from issue)
         if: github.event_name == 'issues'
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ secrets.GH_PAT_ONIZUKA }}
         run: |
           BRANCH_NAME="${{ steps.branch.outputs.name }}"
           ISSUE_NUMBER="${{ github.event.issue.number }}"

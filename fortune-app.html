@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今日の占い - 12星座運勢ランキング</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #f093fb, #f5576c, #ffd89b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #a8dadc;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .date-display {
+            text-align: center;
+            color: #ffd89b;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        .selector-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .selector-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ffd89b;
+            font-size: 1.3rem;
+        }
+
+        .zodiac-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 12px;
+        }
+
+        .zodiac-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 15px 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #fff;
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .zodiac-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: #ffd89b;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(255, 216, 155, 0.3);
+        }
+
+        .zodiac-btn.selected {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            border-color: #ffd89b;
+            box-shadow: 0 5px 20px rgba(240, 147, 251, 0.4);
+        }
+
+        .zodiac-icon {
+            font-size: 1.8rem;
+        }
+
+        .fortune-result {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .fortune-result.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fortune-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .fortune-icon {
+            font-size: 3rem;
+        }
+
+        .fortune-title {
+            font-size: 1.8rem;
+            color: #ffd89b;
+        }
+
+        .overall-fortune {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .fortune-stars {
+            font-size: 2rem;
+            margin: 10px 0;
+            letter-spacing: 5px;
+        }
+
+        .fortune-rank {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+
+        .fortune-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .fortune-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .fortune-item-label {
+            font-size: 0.85rem;
+            color: #a8dadc;
+            margin-bottom: 8px;
+        }
+
+        .fortune-item-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .fortune-message {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 20px;
+            font-size: 1rem;
+            line-height: 1.8;
+            color: #e0e0e0;
+        }
+
+        .fortune-message strong {
+            color: #ffd89b;
+        }
+
+        .ranking-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .ranking-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ffd89b;
+            font-size: 1.3rem;
+        }
+
+        .ranking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .ranking-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        .ranking-item.highlighted {
+            background: linear-gradient(135deg, rgba(240, 147, 251, 0.3), rgba(245, 87, 108, 0.3));
+            border: 2px solid #ffd89b;
+        }
+
+        .ranking-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            width: 50px;
+            text-align: center;
+            margin-right: 15px;
+        }
+
+        .ranking-number.gold {
+            background: linear-gradient(135deg, #ffd700, #ffec8b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .ranking-number.silver {
+            background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .ranking-number.bronze {
+            background: linear-gradient(135deg, #cd7f32, #e9967a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .ranking-zodiac {
+            font-size: 1.8rem;
+            margin-right: 15px;
+        }
+
+        .ranking-name {
+            flex: 1;
+            font-size: 1.1rem;
+        }
+
+        .ranking-stars {
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .zodiac-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .fortune-details {
+                grid-template-columns: 1fr;
+            }
+
+            .ranking-item {
+                padding: 12px 15px;
+            }
+
+            .ranking-number {
+                font-size: 1.2rem;
+                width: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ 今日の占い ✨</h1>
+        <p class="subtitle">12星座運勢ランキング</p>
+        <p class="date-display" id="currentDate"></p>
+
+        <div class="selector-container">
+            <h2>🌟 星座を選んでください</h2>
+            <div class="zodiac-grid" id="zodiacGrid"></div>
+        </div>
+
+        <div class="fortune-result" id="fortuneResult"></div>
+
+        <div class="ranking-container">
+            <h2>🏆 今日の運勢ランキング</h2>
+            <div class="ranking-list" id="rankingList"></div>
+        </div>
+    </div>
+
+    <script>
+        // 12星座のデータ
+        const zodiacSigns = [
+            { name: '牡羊座', icon: '♈', period: '3/21 - 4/19', element: 'fire' },
+            { name: '牡牛座', icon: '♉', period: '4/20 - 5/20', element: 'earth' },
+            { name: '双子座', icon: '♊', period: '5/21 - 6/21', element: 'air' },
+            { name: '蟹座', icon: '♋', period: '6/22 - 7/22', element: 'water' },
+            { name: '獅子座', icon: '♌', period: '7/23 - 8/22', element: 'fire' },
+            { name: '乙女座', icon: '♍', period: '8/23 - 9/22', element: 'earth' },
+            { name: '天秤座', icon: '♎', period: '9/23 - 10/23', element: 'air' },
+            { name: '蠍座', icon: '♏', period: '10/24 - 11/22', element: 'water' },
+            { name: '射手座', icon: '♐', period: '11/23 - 12/21', element: 'fire' },
+            { name: '山羊座', icon: '♑', period: '12/22 - 1/19', element: 'earth' },
+            { name: '水瓶座', icon: '♒', period: '1/20 - 2/18', element: 'air' },
+            { name: '魚座', icon: '♓', period: '2/19 - 3/20', element: 'water' }
+        ];
+
+        // 運勢メッセージのデータ
+        const fortuneMessages = [
+            {
+                overall: '絶好調！',
+                stars: 5,
+                message: '今日はあなたの運気がピークに達しています！<strong>新しいチャレンジ</strong>には絶好の日です。自信を持って一歩踏み出しましょう。',
+                love: '★5',
+                money: '★4',
+                work: '★5',
+                health: '★4'
+            },
+            {
+                overall: 'とても良い',
+                stars: 4,
+                message: '素晴らしい一日になるでしょう。<strong>周囲の人との協調</strong>が幸運を呼び込みます。笑顔を忘れずに過ごしてください。',
+                love: '★4',
+                money: '★5',
+                work: '★4',
+                health: '★4'
+            },
+            {
+                overall: '良い',
+                stars: 4,
+                message: '<strong>ポジティブな思考</strong>が良い結果をもたらします。小さな幸せを見つけることで、さらに運気がアップします。',
+                love: '★4',
+                money: '★3',
+                work: '★4',
+                health: '★5'
+            },
+            {
+                overall: '上昇気流',
+                stars: 3,
+                message: '運気は上向いています！<strong>継続は力なり</strong>。今取り組んでいることをコツコツ続けましょう。',
+                love: '★3',
+                money: '★4',
+                work: '★3',
+                health: '★4'
+            },
+            {
+                overall: 'まずまず',
+                stars: 3,
+                message: '平凡ですが安定した一日です。<strong>バランス</strong>を意識して行動することで、良い結果が生まれます。',
+                love: '★3',
+                money: '★3',
+                work: '★3',
+                health: '★3'
+            },
+            {
+                overall: '平凡',
+                stars: 2,
+                message: '特別なことは起きないかもしれませんが、<strong>地味な努力</strong>が実を結ぶ日です。焦らずゆっくり進みましょう。',
+                love: '★2',
+                money: '★3',
+                work: '★2',
+                health: '★3'
+            },
+            {
+                overall: '要注意',
+                stars: 2,
+                message: '少し注意が必要な日です。<strong>衝動的な行動</strong>は避け、慎重に判断することをおすすめします。',
+                love: '★2',
+                money: '★2',
+                work: '★2',
+                health: '★2'
+            },
+            {
+                overall: '波乱含み',
+                stars: 1,
+                message: '予期せぬことが起きるかもしれません。<strong>柔軟な対応力</strong>が試されます。深呼吸して冷静に対処しましょう。',
+                love: '★1',
+                money: '★1',
+                work: '★2',
+                health: '★1'
+            },
+            {
+                overall: '低調',
+                stars: 1,
+                message: '運気は少し低めです。<strong>休息</strong>を取る日として捉え、自分を労ってあげてください。明日はきっと良くなります。',
+                love: '★1',
+                money: '★2',
+                work: '★1',
+                health: '★2'
+            },
+            {
+                overall: '忍耐の日',
+                stars: 1,
+                message: '我慢が必要な日です。<strong>感情的な反応</strong>を抑え、理性的に行動することで乗り越えられます。',
+                love: '★1',
+                money: '★1',
+                work: '★1',
+                health: '★1'
+            },
+            {
+                overall: '調子を取り戻す',
+                stars: 2,
+                message: '運気が回復に向かっています。<strong>前向きな言葉</strong>を使うことで、さらに運気が上向きます。',
+                love: '★2',
+                money: '★2',
+                work: '★3',
+                health: '★2'
+            },
+            {
+                overall: 'チャンス到来',
+                stars: 3,
+                message: '意外なところでチャンスが！<strong>柔軟な発想</strong>で物事に取り組むと、良い出会いがあるかもしれません。',
+                love: '★3',
+                money: '★4',
+                work: '★3',
+                health: '★3'
+            }
+        ];
+
+        // 今日の日付をシードとして乱数を生成
+        function seededRandom(seed) {
+            let x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+        }
+
+        // 今日の日付からシード値を生成
+        function getTodaySeed() {
+            const today = new Date();
+            const dateString = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+            let hash = 0;
+            for (let i = 0; i < dateString.length; i++) {
+                hash = ((hash << 5) - hash) + dateString.charCodeAt(i);
+                hash = hash & hash;
+            }
+            return Math.abs(hash);
+        }
+
+        // 12星座の運勢を生成（今日の日付に基づいて決定）
+        function generateDailyFortunes() {
+            const seed = getTodaySeed();
+            const fortunes = [];
+            const shuffled = [...fortuneMessages].sort(() => seededRandom(seed + fortunes.length) - 0.5);
+
+            for (let i = 0; i < zodiacSigns.length; i++) {
+                fortunes.push({
+                    ...zodiacSigns[i],
+                    fortune: shuffled[i]
+                });
+            }
+
+            // 星の数でソートしてランキングを作成
+            fortunes.sort((a, b) => b.fortune.stars - a.fortune.stars);
+
+            return fortunes;
+        }
+
+        // 星の数を表示
+        function displayStars(count) {
+            return '⭐'.repeat(count) + '☆'.repeat(5 - count);
+        }
+
+        // 星座選択ボタンを生成
+        function createZodiacButtons() {
+            const grid = document.getElementById('zodiacGrid');
+            const fortunes = generateDailyFortunes();
+
+            zodiacSigns.forEach((sign, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'zodiac-btn';
+                btn.innerHTML = `
+                    <span class="zodiac-icon">${sign.icon}</span>
+                    <span>${sign.name}</span>
+                `;
+                btn.onclick = () => showFortune(sign.name);
+                grid.appendChild(btn);
+            });
+        }
+
+        // 運勢を表示
+        function showFortune(zodiacName) {
+            const fortunes = generateDailyFortunes();
+            const selected = fortunes.find(f => f.name === zodiacName);
+            const rank = fortunes.findIndex(f => f.name === zodiacName) + 1;
+
+            const resultDiv = document.getElementById('fortuneResult');
+            resultDiv.innerHTML = `
+                <div class="fortune-header">
+                    <span class="fortune-icon">${selected.icon}</span>
+                    <span class="fortune-title">${selected.name}</span>
+                </div>
+                <div class="overall-fortune">
+                    <div>総合運</div>
+                    <div class="fortune-stars">${displayStars(selected.fortune.stars)}</div>
+                    <div class="fortune-rank">${selected.fortune.overall}</div>
+                    <div class="fortune-rank">第${rank}位</div>
+                </div>
+                <div class="fortune-details">
+                    <div class="fortune-item">
+                        <div class="fortune-item-label">💕 恋愛運</div>
+                        <div class="fortune-item-value">${selected.fortune.love}</div>
+                    </div>
+                    <div class="fortune-item">
+                        <div class="fortune-item-label">💰 金運</div>
+                        <div class="fortune-item-value">${selected.fortune.money}</div>
+                    </div>
+                    <div class="fortune-item">
+                        <div class="fortune-item-label">💼 仕事運</div>
+                        <div class="fortune-item-value">${selected.fortune.work}</div>
+                    </div>
+                    <div class="fortune-item">
+                        <div class="fortune-item-label">🏥 健康運</div>
+                        <div class="fortune-item-value">${selected.fortune.health}</div>
+                    </div>
+                </div>
+                <div class="fortune-message">
+                    ${selected.fortune.message}
+                </div>
+            `;
+            resultDiv.classList.add('show');
+
+            // ボタンの選択状態を更新
+            document.querySelectorAll('.zodiac-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.textContent.includes(zodiacName)) {
+                    btn.classList.add('selected');
+                }
+            });
+
+            // ランキングのハイライトを更新
+            updateRankingHighlight(zodiacName);
+
+            // 結果にスクロール
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ランキングを表示
+        function displayRanking() {
+            const fortunes = generateDailyFortunes();
+            const listDiv = document.getElementById('rankingList');
+
+            fortunes.forEach((item, index) => {
+                const rankDiv = document.createElement('div');
+                rankDiv.className = 'ranking-item';
+                rankDiv.id = `rank-${index + 1}`;
+                rankDiv.onclick = () => showFortune(item.name);
+
+                let rankClass = '';
+                if (index === 0) rankClass = 'gold';
+                else if (index === 1) rankClass = 'silver';
+                else if (index === 2) rankClass = 'bronze';
+
+                rankDiv.innerHTML = `
+                    <span class="ranking-number ${rankClass}">${index + 1}</span>
+                    <span class="ranking-zodiac">${item.icon}</span>
+                    <span class="ranking-name">${item.name}</span>
+                    <span class="ranking-stars">${displayStars(item.fortune.stars)}</span>
+                `;
+                listDiv.appendChild(rankDiv);
+            });
+        }
+
+        // ランキングのハイライトを更新
+        function updateRankingHighlight(zodiacName) {
+            const fortunes = generateDailyFortunes();
+            const rank = fortunes.findIndex(f => f.name === zodiacName) + 1;
+
+            document.querySelectorAll('.ranking-item').forEach(item => {
+                item.classList.remove('highlighted');
+            });
+            document.getElementById(`rank-${rank}`).classList.add('highlighted');
+        }
+
+        // 今日の日付を表示
+        function displayCurrentDate() {
+            const today = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('currentDate').textContent = today.toLocaleDateString('ja-JP', options);
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            displayCurrentDate();
+            createZodiacButtons();
+            displayRanking();
+        });
+    </script>
+</body>
+</html>

@@ -1,9 +1,17 @@
 #!/bin/bash
 set -e
 
+# デバッグログ用関数
+log() {
+  echo "[DEBUG] $*" >&2
+}
+
 # 引数から必要な情報を受け取る
 BRANCH_NAME="$1"
 ISSUE_NUMBER="$2"
+
+log "Branch name: $BRANCH_NAME"
+log "Issue number: $ISSUE_NUMBER"
 
 # 既にPRが存在するか確認
 PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --json number --jq '. | length > 0')
@@ -12,17 +20,26 @@ if [ "$PR_EXISTS" = "true" ]; then
   exit 0
 fi
 
+# ブランチの最新コミットメッセージを取得
+COMMIT_BODY=$(git log origin/main.."$BRANCH_NAME" --pretty=format:"%B" --reverse | head -n 1)
+log "Commit body: $COMMIT_BODY"
+
 # Claudeの最新のコメントを取得（配列の最後の要素を取得）
-CLAUDE_COMMENT=$(gh issue view "$ISSUE_NUMBER" --json comments --jq '[.comments[] | select(.author.login == "claude[bot]") | .body] | last')
+CLAUDE_COMMENT=$(gh issue view "$ISSUE_NUMBER" --json comments --jq '[.comments[] | select(.author.login == "claude[bot]") | .body] | last' 2>/dev/null || echo "")
+log "Claude comment: $CLAUDE_COMMENT"
 
 # 「Create PR ➔」リンクのURLを抽出（Pythonで正規表現）
-CREATE_PR_URL=$(python3 -c "
+CREATE_PR_URL=""
+if [ -n "$CLAUDE_COMMENT" ]; then
+  CREATE_PR_URL=$(python3 -c "
 import re, sys
 comment = '''$CLAUDE_COMMENT'''
 match = re.search(r'\[Create PR[^\]]*\]\((https[^)]+)\)', comment)
 if match:
     print(match.group(1))
 " || echo "")
+fi
+log "Create PR URL: $CREATE_PR_URL"
 
 if [ -n "$CREATE_PR_URL" ]; then
   # URLからtitleとbodyパラメータを抽出
@@ -34,7 +51,7 @@ if [ -n "$CREATE_PR_URL" ]; then
   PR_TITLE=$(python3 -c "import sys, urllib.parse; print(urllib.parse.unquote('$ENCODED_TITLE'))")
   PR_BODY=$(python3 -c "import sys, urllib.parse; print(urllib.parse.unquote('$ENCODED_BODY'))")
 else
-  # フォールバック: Issueタイトルを使用
+  # フォールバック: Issueタイトルとコミットメッセージを使用
   ISSUE_TITLE=$(gh issue view "$ISSUE_NUMBER" --json title --jq '.title')
   if [[ "$ISSUE_TITLE" =~ を作って|を作成|を追加 ]]; then
     PR_PREFIX="feat:"
@@ -53,7 +70,12 @@ else
     PR_TITLE="$ISSUE_TITLE"
   fi
 
-  PR_BODY="$CLAUDE_COMMENT"
+  # コミットメッセージまたはClaudeのコメントを使用
+  if [ -n "$COMMIT_BODY" ]; then
+    PR_BODY="$COMMIT_BODY"
+  else
+    PR_BODY="$CLAUDE_COMMENT"
+  fi
 fi
 
 # PR本文にClosesとGenerated withを追加
@@ -64,6 +86,9 @@ FINAL_BODY="$PR_BODY
 Closes #$ISSUE_NUMBER
 
 Generated with [Claude Code](https://claude.ai/code)"
+
+log "PR title: $PR_TITLE"
+log "PR body length: ${#FINAL_BODY}"
 
 # PRを作成
 gh pr create \

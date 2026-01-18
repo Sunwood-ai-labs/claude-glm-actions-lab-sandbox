@@ -46,8 +46,8 @@ jobs:
             echo "name=claude-glm-dev-issue-${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
           fi
 
-      # ★Issue/PRのBodyからキャラクターとタスクを抽出してCLAUDE.mdを生成
-      - name: Generate CLAUDE.md from Issue/PR Body
+      # ★Issue/PRのBodyからキャラクターとタスクを抽出してCLAUDE.mdに追記
+      - name: Append agent settings to CLAUDE.md
         shell: bash
         run: |
           if [[ "${{ github.event_name }}" == "issues" ]] || [[ "${{ github.event_name == "issue_comment" ]]; then
@@ -58,7 +58,18 @@ jobs:
 
           python3 .github/scripts/merge-agent.py \
             "${{ github.event.issue.number || github.event.pull_request.number }}" \
-            "CLAUDE.md"
+            ".claude/CLAUDE.md.tmp"
+
+          # 元の.claude/CLAUDE.mdがあれば、それをベースに追加設定をマージ
+          if [ -f ".claude/CLAUDE.md" ]; then
+            # 既存の設定部分（---より前）と新しい設定をマージ
+            echo "元のCLAUDE.mdをベースに追加設定をマージします" >&2
+            cat .claude/CLAUDE.md .claude/CLAUDE.md.tmp > CLAUDE.md
+          else
+            # 元のCLAUDE.mdがない場合は、生成したものを使う
+            echo "CLAUDE.mdがないので、生成したものを使います" >&2
+            cp .claude/CLAUDE.md.tmp CLAUDE.md
+          fi
 
       - uses: anthropics/claude-code-action@v1
         with:

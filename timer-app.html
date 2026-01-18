@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カウントダウンタイマー</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .timer-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            min-width: 320px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .time-input {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .input-group input {
+            width: 70px;
+            height: 60px;
+            font-size: 28px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: #667eea;
+        }
+
+        .input-group label {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .timer-display {
+            font-size: 64px;
+            font-weight: bold;
+            color: #333;
+            margin: 30px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timer-display.finished {
+            color: #e74c3c;
+            animation: pulse 0.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-start {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .btn-start:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+        }
+
+        .btn-pause {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-pause:hover {
+            background: #e67e22;
+            transform: translateY(-2px);
+        }
+
+        .btn-reset {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-start:disabled:hover,
+        .btn-pause:disabled:hover,
+        .btn-reset:disabled:hover {
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="timer-container">
+        <h1>カウントダウンタイマー</h1>
+
+        <div class="time-input" id="timeInput">
+            <div class="input-group">
+                <input type="number" id="hoursInput" min="0" max="99" value="0">
+                <label>時間</label>
+            </div>
+            <div class="input-group">
+                <input type="number" id="minutesInput" min="0" max="59" value="5">
+                <label>分</label>
+            </div>
+            <div class="input-group">
+                <input type="number" id="secondsInput" min="0" max="59" value="0">
+                <label>秒</label>
+            </div>
+        </div>
+
+        <div class="timer-display" id="timerDisplay">00:05:00</div>
+
+        <div class="controls">
+            <button class="btn-start" id="startBtn">開始</button>
+            <button class="btn-pause" id="pauseBtn" disabled>一時停止</button>
+            <button class="btn-reset" id="resetBtn">リセット</button>
+        </div>
+    </div>
+
+    <script>
+        // Timer state
+        let totalSeconds = 0;
+        let intervalId = null;
+        let isPaused = false;
+
+        // DOM elements
+        const hoursInput = document.getElementById('hoursInput');
+        const minutesInput = document.getElementById('minutesInput');
+        const secondsInput = document.getElementById('secondsInput');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const timeInput = document.getElementById('timeInput');
+
+        // Format time as HH:MM:SS
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        // Update display
+        function updateDisplay() {
+            timerDisplay.textContent = formatTime(totalSeconds);
+        }
+
+        // Get time from inputs
+        function getTimeFromInputs() {
+            const hours = parseInt(hoursInput.value) || 0;
+            const minutes = parseInt(minutesInput.value) || 0;
+            const seconds = parseInt(secondsInput.value) || 0;
+            return hours * 3600 + minutes * 60 + seconds;
+        }
+
+        // Start timer
+        function startTimer() {
+            if (!isPaused) {
+                totalSeconds = getTimeFromInputs();
+                if (totalSeconds === 0) return;
+            }
+
+            isPaused = false;
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            timeInput.style.opacity = '0.5';
+            timeInput.style.pointerEvents = 'none';
+            timerDisplay.classList.remove('finished');
+
+            intervalId = setInterval(() => {
+                if (totalSeconds > 0) {
+                    totalSeconds--;
+                    updateDisplay();
+                } else {
+                    clearInterval(intervalId);
+                    timerDisplay.classList.add('finished');
+                    startBtn.disabled = false;
+                    pauseBtn.disabled = true;
+                    timeInput.style.opacity = '1';
+                    timeInput.style.pointerEvents = 'auto';
+                }
+            }, 1000);
+        }
+
+        // Pause timer
+        function pauseTimer() {
+            clearInterval(intervalId);
+            isPaused = true;
+            startBtn.disabled = false;
+            startBtn.textContent = '再開';
+            pauseBtn.disabled = true;
+        }
+
+        // Reset timer
+        function resetTimer() {
+            clearInterval(intervalId);
+            isPaused = false;
+            totalSeconds = getTimeFromInputs();
+            updateDisplay();
+            startBtn.disabled = false;
+            startBtn.textContent = '開始';
+            pauseBtn.disabled = true;
+            timeInput.style.opacity = '1';
+            timeInput.style.pointerEvents = 'auto';
+            timerDisplay.classList.remove('finished');
+        }
+
+        // Input change handler
+        function handleInputChange() {
+            if (!intervalId && !isPaused) {
+                // Clamp values
+                hoursInput.value = Math.max(0, Math.min(99, parseInt(hoursInput.value) || 0));
+                minutesInput.value = Math.max(0, Math.min(59, parseInt(minutesInput.value) || 0));
+                secondsInput.value = Math.max(0, Math.min(59, parseInt(secondsInput.value) || 0));
+                totalSeconds = getTimeFromInputs();
+                updateDisplay();
+            }
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', resetTimer);
+        hoursInput.addEventListener('change', handleInputChange);
+        minutesInput.addEventListener('change', handleInputChange);
+        secondsInput.addEventListener('change', handleInputChange);
+
+        // Initialize display
+        handleInputChange();
+    </script>
+</body>
+</html>

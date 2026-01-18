@@ -57,17 +57,6 @@ jobs:
             BODY="${{ github.event.pull_request.body }}"
           fi
 
-          # タスクを抽出
-          TASK=$(python3 -c "
-import re
-body = '''$BODY'''
-task_match = re.search(r'タスク[：:]\s*([^\n]+)', body)
-if task_match:
-    print(task_match.group(1).strip())
-" || echo "")
-
-          echo "task=$TASK" >> $GITHUB_OUTPUT
-
           # キャラクターとタスクをマージ
           python3 .github/scripts/merge-agent.py \
             "${{ github.event.issue.number || github.event.pull_request.number }}" \
@@ -86,7 +75,7 @@ if task_match:
           branch_prefix: ""
           branch_name_template: ${{ steps.branch.outputs.name }}
           anthropic_api_key: ${{ secrets.ZAI_API_KEY }}
-          prompt: "${{ steps.setup.outputs.task }}"
+          prompt: "${{ github.event.issue.body }}"
         env:
           ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic
           ANTHROPIC_AUTH_TOKEN: ${{ secrets.ZAI_API_KEY }}

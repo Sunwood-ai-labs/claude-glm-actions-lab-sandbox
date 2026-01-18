@@ -46,9 +46,9 @@ jobs:
             echo "name=claude-glm-dev-issue-${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
           fi
 
-      # ★Issue/PRのBodyからキャラクターとタスクを抽出
-      - name: Extract character and task from Issue/PR Body
-        id: extract
+      # ★Issue/PRのBodyからキャラクターとタスクを抽出してCLAUDE.mdに追記
+      - name: Setup CLAUDE.md with character and task
+        id: setup
         shell: bash
         run: |
           if [[ "${{ github.event_name }}" == "issues" ]] || [[ "${{ github.event_name == "issue_comment" ]]; then
@@ -57,50 +57,26 @@ jobs:
             BODY="${{ github.event.pull_request.body }}"
           fi
 
-          python3 .github/scripts/merge-agent.py \
-            "${{ github.event.issue.number || github.event.pull_request.number }}" \
-            ".claude/CLAUDE.md.tmp"
-
-          # 元の.claude/CLAUDE.mdがあれば、それをベースに追加設定をマージ
-          if [ -f ".claude/CLAUDE.md" ]; then
-            cat .claude/CLAUDE.md .claude/CLAUDE.md.tmp > CLAUDE.md
-          else
-            cp .claude/CLAUDE.md.tmp CLAUDE.md
-          fi
-
-          # タスクを環境変数に保存
+          # タスクを抽出
           TASK=$(python3 -c "
 import re
-import sys
 body = '''$BODY'''
 task_match = re.search(r'タスク[：:]\s*([^\n]+)', body)
 if task_match:
     print(task_match.group(1).strip())
 " || echo "")
+
           echo "task=$TASK" >> $GITHUB_OUTPUT
 
-      # ★Issue/PRのBodyからキャラクターとタスクを抽出してCLAUDE.mdに追記
-      - name: Append agent settings to CLAUDE.md
-        shell: bash
-        run: |
-          if [[ "${{ github.event_name }}" == "issues" ]] || [[ "${{ github.event_name == "issue_comment" ]]; then
-            BODY="${{ github.event.issue.body }}"
-          else
-            BODY="${{ github.event.pull_request.body }}"
-          fi
-
+          # キャラクターとタスクをマージ
           python3 .github/scripts/merge-agent.py \
             "${{ github.event.issue.number || github.event.pull_request.number }}" \
             ".claude/CLAUDE.md.tmp"
 
           # 元の.claude/CLAUDE.mdがあれば、それをベースに追加設定をマージ
           if [ -f ".claude/CLAUDE.md" ]; then
-            # 既存の設定部分（---より前）と新しい設定をマージ
-            echo "元のCLAUDE.mdをベースに追加設定をマージします" >&2
             cat .claude/CLAUDE.md .claude/CLAUDE.md.tmp > CLAUDE.md
           else
-            # 元のCLAUDE.mdがない場合は、生成したものを使う
-            echo "CLAUDE.mdがないので、生成したものを使います" >&2
             cp .claude/CLAUDE.md.tmp CLAUDE.md
           fi
 
@@ -110,7 +86,7 @@ if task_match:
           branch_prefix: ""
           branch_name_template: ${{ steps.branch.outputs.name }}
           anthropic_api_key: ${{ secrets.ZAI_API_KEY }}
-          prompt: "${{ steps.extract.outputs.task }}"
+          prompt: "${{ steps.setup.outputs.task }}"
         env:
           ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic
           ANTHROPIC_AUTH_TOKEN: ${{ secrets.ZAI_API_KEY }}

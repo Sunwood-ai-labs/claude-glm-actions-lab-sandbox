@@ -52,12 +52,12 @@ jobs:
           branch_name_template: ${{ steps.branch.outputs.name }}
 
           # ★追加：バリデーション通過用に必要
-          anthropic_api_key: ${{ secrets.CLAUDE_GLM_DEV_API_KEY }}
+          anthropic_api_key: ${{ secrets.ZAI_API_KEY }}
 
         env:
           # GLMに向ける設定
           ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic
-          ANTHROPIC_AUTH_TOKEN: ${{ secrets.CLAUDE_GLM_DEV_API_KEY }}
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ZAI_API_KEY }}
           API_TIMEOUT_MS: "3000000"
           ANTHROPIC_DEFAULT_OPUS_MODEL: "glm-4.7"
           ANTHROPIC_DEFAULT_SONNET_MODEL: "glm-4.7"

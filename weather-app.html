@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天気予報アプリ</title>
+    <link rel="stylesheet" href="weather-app.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌤️ 天気予報アプリ</h1>
+        </header>
+
+        <main>
+            <div class="search-box">
+                <input type="text" id="cityInput" placeholder="都市名を入力（例：東京、London、New York）" autocomplete="off">
+                <button id="searchBtn">🔍 検索</button>
+            </div>
+
+            <div id="weatherDisplay" class="weather-display">
+                <!-- 天気情報がここに表示されます -->
+            </div>
+
+            <div id="errorMessage" class="error-message" style="display: none;">
+                <p></p>
+            </div>
+        </main>
+
+        <footer>
+            <p>天気データは OpenWeatherMap API を使用しています</p>
+        </footer>
+    </div>
+
+    <script src="weather-app.js"></script>
+</body>
+</html>

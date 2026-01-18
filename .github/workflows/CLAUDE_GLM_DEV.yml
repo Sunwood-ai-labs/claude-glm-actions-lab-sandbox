@@ -68,6 +68,7 @@ jobs:
         if: github.event_name == 'issues'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT_ONIZUKA }}
+          INCLUDE_TASK_SUMMARY: "true"  # タスクサマリー（---より後ろの報告内容）を含めるかどうか
         run: |
           python3 .github/scripts/create-pr.py \
             "${{ steps.branch.outputs.name }}" \

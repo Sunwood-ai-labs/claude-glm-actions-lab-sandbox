@@ -49,7 +49,7 @@ jobs:
 
           # ★ブランチ名を固定（タイムスタンプなし）
           branch_prefix: ""
-          branch_name_template: "claude-glm-dev-issue-1"
+          branch_name_template: ${{ steps.branch.outputs.name }}
 
           # ★追加：バリデーション通過用に必要
           anthropic_api_key: ${{ secrets.CLAUDE_GLM_DEV_API_KEY }}

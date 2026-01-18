@@ -62,3 +62,30 @@ jobs:
           ANTHROPIC_DEFAULT_OPUS_MODEL: "glm-4.7"
           ANTHROPIC_DEFAULT_SONNET_MODEL: "glm-4.7"
           ANTHROPIC_DEFAULT_HAIKU_MODEL: "glm-4.5-air"
+
+      # ★Issueからトリガーされた場合のみ、自動でPRを作成
+      - name: Create PR (if from issue)
+        if: github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          BRANCH_NAME="${{ steps.branch.outputs.name }}"
+          ISSUE_NUMBER="${{ github.event.issue.number }}"
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+
+          # 既にPRが存在するか確認
+          PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --json number --jq '. | length > 0')
+          if [ "$PR_EXISTS" = "true" ]; then
+            echo "PR already exists for branch $BRANCH_NAME, skipping..."
+            exit 0
+          fi
+
+          # PRを作成
+          gh pr create \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --title "$ISSUE_TITLE" \
+            --body "Closes #$ISSUE_NUMBER
+
+          Generated with [Claude Code](https://claude.ai/code)" \
+            || echo "PR creation failed or branch has no changes"

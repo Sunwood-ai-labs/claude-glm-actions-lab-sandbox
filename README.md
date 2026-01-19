@@ -67,8 +67,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-## Test
+## Test GH_PAT_ONIZUKA
 
-This is a test PR to verify the auto review comment feature.
+Testing auto comment with GH_PAT_ONIZUKA token.
 
 _Made with ❤️ by [Sunwood AI Labs](https://github.com/Sunwood-ai-labs)_

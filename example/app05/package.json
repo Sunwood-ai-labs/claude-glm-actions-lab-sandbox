@@ -1,0 +1,22 @@
+{
+  "name": "example-app05",
+  "version": "1.0.0",
+  "description": "Sample TypeScript utility functions demo",
+  "main": "index.ts",
+  "scripts": {
+    "start": "tsx index.ts",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "typescript",
+    "utilities",
+    "example"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -21,14 +21,13 @@ jobs:
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'issues' && contains(github.event.issue.body, '@claude')) ||
-      (github.event_name == 'pull_request' && env.AUTO_REVIEW_PR == 'true')
+      github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     # デフォルト設定（必要に応じてオーバーライド可能）
     env:
       CREATE_AUTO_PR: "true"              # Issueからのトリガー時に自動でPRを作成するかどうか
       INCLUDE_TASK_SUMMARY: "true"        # タスクサマリー（---より後ろの報告内容）を含めるかどうか
-      AUTO_REVIEW_PR: "true"              # PR作成時に自動でレビューを実行するかどうか
 
     permissions:
       contents: write
@@ -55,7 +54,6 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           trigger_phrase: "@claude"
-          github_token: ${{ secrets.GH_PAT_ONIZUKA }}
 
           # ★ブランチ名を固定（タイムスタンプなし）
           branch_prefix: ""
@@ -89,31 +87,3 @@ jobs:
           python3 .github/scripts/create-pr.py \
             "${{ steps.branch.outputs.name }}" \
             "${{ github.event.issue.number }}"
-
-  # ★PRが作成された時に自動で通知コメントを投稿
-  auto_comment:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-
-    # デフォルト設定
-    env:
-      AUTO_REVIEW_COMMENT: "true"         # PR作成時に自動で通知コメントをするかどうか
-
-    permissions:
-      pull-requests: write
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Post review request comment
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # 環境変数でコメント投稿を制御
-          if [[ "${{ env.AUTO_REVIEW_COMMENT }}" != "true" ]]; then
-            echo "AUTO_REVIEW_COMMENT is not true. Skipping comment."
-            exit 0
-          fi
-
-          gh pr comment ${{ github.event.pull_request.number }} \
-            --body "🤖 自動レビューが開始されました。"

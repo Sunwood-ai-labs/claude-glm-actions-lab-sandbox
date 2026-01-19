@@ -8,6 +8,9 @@ permissions:
   contents: read
   pull-requests: write
 
+env:
+  ENABLE_PR_AUTO_COMMENT: ${{ vars.ENABLE_PR_AUTO_COMMENT || 'true' }}
+
 jobs:
   auto-comment:
     runs-on: ubuntu-latest
@@ -17,10 +20,7 @@ jobs:
         with:
           github-token: ${{ secrets.GH_PAT_ONIZUKA }}
           script: |
-            // 環境変数でON/OFFを制御（デフォルトはtrue）
-            const enabled = '${{ vars.ENABLE_PR_AUTO_COMMENT }}' !== 'false';
-
-            if (!enabled) {
+            if ('${{ env.ENABLE_PR_AUTO_COMMENT }}' !== 'true') {
               console.log('PR Auto Comment is disabled. Skipping...');
               return;
             }

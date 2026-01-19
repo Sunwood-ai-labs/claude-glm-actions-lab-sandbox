@@ -53,6 +53,7 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           trigger_phrase: "@claude"
+          github_token: ${{ secrets.GH_PAT_ONIZUKA }}
 
           # ★ブランチ名を固定（タイムスタンプなし）
           branch_prefix: ""

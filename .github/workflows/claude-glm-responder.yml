@@ -104,7 +104,7 @@ jobs:
 
       - name: Post review request comment
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT_ONIZUKA }}
         run: |
           # 環境変数でコメント投稿を制御
           if [[ "${{ env.AUTO_REVIEW_COMMENT }}" != "true" ]]; then

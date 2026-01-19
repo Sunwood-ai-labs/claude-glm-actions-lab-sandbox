@@ -8,8 +8,14 @@ permissions:
   contents: read
   pull-requests: write
 
+env:
+  # 環境変数でON/OFFを制御（デフォルトはtrue）
+  ENABLE_PR_AUTO_COMMENT: ${{ vars.ENABLE_PR_AUTO_COMMENT || 'true' }}
+
 jobs:
   auto-comment:
+    # 環境変数がtrueの場合のみ実行
+    if: env.ENABLE_PR_AUTO_COMMENT == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Comment on PR

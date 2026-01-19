@@ -1,42 +1,42 @@
-var x=1
-var y=2
-var z=3
+// Utility functions for math operations
 
-function a(b:any,c:any){
-return b+c
+/**
+ * Adds two numbers together
+ */
+function add(a: number, b: number): number {
+  return a + b;
 }
 
-function d(e,f){
-console.log(e)
-console.log(f)
-console.log(e+f)
-return e*f
+/**
+ * Multiplies two numbers together
+ */
+function multiply(x: number, y: number): number {
+  return x * y;
 }
 
-const g=function(h,i,j){
-if(h==1)return"one"
-if(h==2)return"two"
-if(h==3)return"three"
-return i+j
+/**
+ * Returns the word representation of a number (1-3),
+ * or concatenates the two strings if number is not 1-3
+ */
+function numberToWordOrConcat(num: number, str1: string, str2: string): string {
+  if (num === 1) return "one";
+  if (num === 2) return "two";
+  if (num === 3) return "three";
+  return str1 + str2;
 }
 
-var obj={n:"test",v:123}
-console.log(obj.n)
-console.log(obj.v)
+// Data object with clear property names
+const data = {
+  name: "test",
+  value: 123,
+};
 
-x=a(x,y)
-console.log(x)
+// Perform calculations
+let result = add(1, 2);
+result = add(result, 3);
 
-var arr=[1,2,3,4,5]
-for(var i=0;i<arr.length;i++){
-console.log(arr[i])
-arr[i]=arr[i]*2
-}
-console.log(arr)
+// Double each element in the array
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map((n) => n * 2);
 
-function calc(s){
-    eval("return "+s)
-}
-
-var result=calc("1+1")
-console.log(result)
+export { add, multiply, numberToWordOrConcat };

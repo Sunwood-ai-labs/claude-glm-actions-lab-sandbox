@@ -1,16 +1,8 @@
-import {a,d,g} from './messy'
+import { add, multiply, numberToWordOrConcat } from "./messy";
 
-console.log("start")
-var r1=a(10,20)
-console.log(r1)
+// Test the utility functions
+const sum = add(10, 20);
+const product = multiply(5, 3);
+const word = numberToWordOrConcat(1, "hello", "world");
 
-var r2=d(5,3)
-console.log(r2)
-
-var r3=g(1,"hello","world")
-console.log(r3)
-
-var unused="this is never used"
-var alsoUnused=123
-
-console.log("end")
+console.log("Results:", { sum, product, word });

@@ -30,9 +30,17 @@ const total = sum(numbers);
 console.log(`${numbers.join(' + ')} = ${total}`);
 
 console.log('\n=== キャメルケース変換のサンプル ===');
-const snakeCaseStr = 'hello-world-example';
-const camelCase = toCamelCase(snakeCaseStr);
-console.log(`"${snakeCaseStr}" → "${camelCase}"`);
+const testCases = [
+  'hello-world-example',
+  'hello_world_example',
+  'Hello World Example',
+  '  extra--spaces  ',
+  'multiple---dashes'
+];
+testCases.forEach(str => {
+  const result = toCamelCase(str);
+  console.log(`"${str}" → "${result}"`);
+});
 
 console.log('\n=== シャッフルのサンプル ===');
 const originalArr = [1, 2, 3, 4, 5];

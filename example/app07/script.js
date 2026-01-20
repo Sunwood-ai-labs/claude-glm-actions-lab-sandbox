@@ -1,7 +1,7 @@
 // おみくじのデータ
 const omikujiData = [
     { rank: '大吉', message: '素晴らしい一年になりそう！✨', class: 'luck-daikichi' },
-    { rank: '中吉', message: '順調に進みます🌸', class: 'luck-kichi' },
+    { rank: '中吉', message: '順調に進みます🌸', class: 'luck-chukichi' },
     { rank: '小吉', message: '小さな幸せがいっぱい💖', class: 'luck-shokichi' },
     { rank: '吉', message: '良好な運勢です☀️', class: 'luck-kichi' },
     { rank: '末吉', message: 'ゆっくりと良い方向へ🌱', class: 'luck-sue' },

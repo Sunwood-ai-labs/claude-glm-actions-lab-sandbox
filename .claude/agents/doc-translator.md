@@ -164,12 +164,21 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 プルリクエストの差分からREADMEを作成する場合:
 
 ```markdown
-<p align="center">
-    <a href="README_JA.md"><img src="https://img.shields.io/badge/ドキュメント-日本語-white.svg" alt="JA doc"/></a>
-    <a href="README.md"><img src="https://img.shields.io/badge/Documentation-English-white.svg" alt="EN doc"/></a>
-</p>
+<div align="center">
 
+<!-- ヘッダー画像（もしあれば） -->
+<img src="[ヘッダー画像URL]" alt="Project Header" width="800"/>
+
+<!-- プロジェクトタイトル -->
 # プロジェクト名
+
+<!-- 言語切り替えバッジ -->
+<a href="README_JA.md"><img src="https://img.shields.io/badge/ドキュメント-日本語-white.svg" alt="JA doc"/></a>
+<a href="README.md"><img src="https://img.shields.io/badge/Documentation-English-white.svg" alt="EN doc"/></a>
+
+</div>
+
+<!-- 要約 -->
 
 [要約]
 

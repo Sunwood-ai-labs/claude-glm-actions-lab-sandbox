@@ -10,6 +10,8 @@ permissions:
 
 env:
   ENABLE_PR_AUTO_COMMENT: ${{ vars.ENABLE_PR_AUTO_COMMENT || 'true' }}
+  TEMPLATE_SOURCE: ${{ vars.TEMPLATE_SOURCE || 'remote' }}  # テンプレートのソース: local または remote
+  TEMPLATE_URL: ${{ vars.TEMPLATE_URL || 'https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/refs/heads/main/.github/templates/pr-comment.md' }}
 
 jobs:
   auto-comment:
@@ -27,10 +29,26 @@ jobs:
               return;
             }
 
-            const fs = require('fs');
-            const commentBody = fs.readFileSync('.github/templates/pr-comment.md', 'utf8');
+            let commentBody;
+            const templateSource = '${{ env.TEMPLATE_SOURCE }}';
 
-            github.rest.issues.createComment({
+            if (templateSource === 'remote') {
+              // リモートからテンプレートをダウンロード
+              console.log('Downloading template from remote...');
+              const templateUrl = '${{ env.TEMPLATE_URL }}';
+              if (!templateUrl) {
+                throw new Error('TEMPLATE_SOURCE=remote but TEMPLATE_URL is not set!');
+              }
+              const response = await fetch(templateUrl);
+              commentBody = await response.text();
+            } else {
+              // ローカルからテンプレートを読み込み
+              console.log('Using local template...');
+              const fs = require('fs');
+              commentBody = fs.readFileSync('.github/templates/pr-comment.md', 'utf8');
+            }
+
+            await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,

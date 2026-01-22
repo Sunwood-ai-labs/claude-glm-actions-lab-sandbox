@@ -2,32 +2,32 @@ const omikujiData = [
   {
     result: "大吉",
     className: "daikichi",
-    message: "最高の一日になるでしょう！✨ 何をやってもうまくいきそうです！"
+    message: "最高の一日になるでしょう！何をやってもうまくいきそうです！"
   },
   {
     result: "中吉",
     className: "chukichi",
-    message: "良い日になるでしょう！前向きに取り組めば成功します！💪"
+    message: "良い日になるでしょう！前向きに取り組めば成功します！"
   },
   {
     result: "小吉",
-    className: "kichi",
-    message: "小さな幸せが訪れるでしょう。日常を楽しみましょう！🌸"
+    className: "shokichi",
+    message: "小さな幸せが訪れるでしょう。日常を楽しみましょう！"
   },
   {
     result: "末吉",
     className: "suekichi",
-    message: "努力が実を結ぶのはもう少し後。諦めずに続けましょう！🌱"
+    message: "努力が実を結ぶのはもう少し後。諦めずに続けましょう！"
   },
   {
     result: "凶",
     className: "kyo",
-    message: "注意が必要な日です。慎重に行動しましょう。💦"
+    message: "注意が必要な日です。慎重に行動しましょう。"
   },
   {
     result: "大凶",
     className: "daikyo",
-    message: "今日は大人しく過ごすのが吉。明日はきっと良い日です！🌙"
+    message: "今日は大人しく過ごすのが吉。明日はきっと良い日です！"
   }
 ];
 

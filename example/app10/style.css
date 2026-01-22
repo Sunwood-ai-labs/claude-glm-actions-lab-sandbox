@@ -64,7 +64,6 @@ h1 {
 
 .daikichi { color: #e74c3c; }
 .chukichi { color: #f39c12; }
-.kichi { color: #27ae60; }
 .shokichi { color: #3498db; }
 .suekichi { color: #9b59b6; }
 .kyo { color: #7f8c8d; }
@@ -96,6 +95,24 @@ h1 {
   background: #ccc;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+.draw-btn:focus-visible {
+  outline: 3px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Screen Reader Only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .message {

@@ -3,22 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>おみくじ 🎴</title>
+  <title>おみくじアプリ - 今日の運勢を占おう</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>おみくじ 🎴</h1>
+  <main class="container" role="main">
+    <h1>おみくじ</h1>
     <p class="subtitle">今日の運勢を占ってみよう！</p>
 
-    <div class="omikuji-box" id="omikujiBox">
-      <div class="omikuji-result" id="result"></div>
+    <div class="omikuji-box" id="omikujiBox" role="region" aria-label="おみくじ結果表示エリア">
+      <div class="omikuji-result" id="result" role="status" aria-live="polite" aria-atomic="true"></div>
     </div>
 
-    <button class="draw-btn" id="drawBtn">おみくじを引く</button>
+    <button class="draw-btn" id="drawBtn" aria-describedby="drawBtnDesc">おみくじを引く</button>
+    <span id="drawBtnDesc" class="sr-only">ボタンを押すとおみくじを引いて、運勢が表示されます</span>
 
-    <div class="message" id="message"></div>
-  </div>
+    <div class="message" id="message" role="status" aria-live="polite" aria-atomic="true"></div>
+  </main>
 
   <script src="script.js"></script>
 </body>

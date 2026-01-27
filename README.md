@@ -60,6 +60,7 @@ Claude Code GitHub Actions with GLM API integration laboratory. This repository 
 The workflow is triggered on:
 - Issue comments
 - Pull request review comments
+- Pull requests (opened) - for auto review comment feature
 
 ## License
 

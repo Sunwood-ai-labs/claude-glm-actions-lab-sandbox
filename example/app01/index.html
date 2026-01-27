@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Counter App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem 3rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 2rem;
+            font-size: 1.5rem;
+        }
+
+        .counter {
+            font-size: 5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin: 2rem 0;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            font-size: 1.25rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #decrease {
+            background: #f56565;
+            color: white;
+        }
+
+        #reset {
+            background: #ed8936;
+            color: white;
+        }
+
+        #increase {
+            background: #48bb78;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Simple Counter App</h1>
+        <div class="counter" id="counter">0</div>
+        <div class="buttons">
+            <button id="decrease">-1</button>
+            <button id="reset">Reset</button>
+            <button id="increase">+1</button>
+        </div>
+    </div>
+
+    <script>
+        let count = 0;
+        const counterDisplay = document.getElementById('counter');
+        const decreaseBtn = document.getElementById('decrease');
+        const resetBtn = document.getElementById('reset');
+        const increaseBtn = document.getElementById('increase');
+
+        function updateDisplay() {
+            counterDisplay.textContent = count;
+            if (count > 0) {
+                counterDisplay.style.color = '#48bb78';
+            } else if (count < 0) {
+                counterDisplay.style.color = '#f56565';
+            } else {
+                counterDisplay.style.color = '#667eea';
+            }
+        }
+
+        decreaseBtn.addEventListener('click', () => {
+            count--;
+            updateDisplay();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            count = 0;
+            updateDisplay();
+        });
+
+        increaseBtn.addEventListener('click', () => {
+            count++;
+            updateDisplay();
+        });
+
+        updateDisplay();
+    </script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+name: Release sync-repo-tui
+
+on:
+  push:
+    tags:
+      - 'sync-repo-tui-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            artifact_name: sync-repo-tui
+            asset_name: sync-repo-tui-linux-amd64
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            artifact_name: sync-repo-tui
+            asset_name: sync-repo-tui-linux-arm64
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            artifact_name: sync-repo-tui
+            asset_name: sync-repo-tui-linux-musl-amd64
+          - target: x86_64-pc-windows-gnu
+            os: ubuntu-latest
+            artifact_name: sync-repo-tui.exe
+            asset_name: sync-repo-tui-windows-amd64.exe
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            artifact_name: sync-repo-tui
+            asset_name: sync-repo-tui-macos-amd64
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            artifact_name: sync-repo-tui
+            asset_name: sync-repo-tui-macos-arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross-compilation tools
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-aarch64-linux-gnu \
+            gcc-mingw-w64-x86-64
+
+      - name: Build binary
+        run: |
+          cd scripts/sync-repo-tui
+          cargo build --release --target ${{ matrix.target }}
+
+      - name: Prepare artifact
+        run: |
+          cd scripts/sync-repo-tui
+          mkdir -p artifact
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            if [ "${{ matrix.target }}" = "aarch64-apple-darwin" ]; then
+              lipo -create -output artifact/${{ matrix.artifact_name }} target/aarch64-apple-darwin/release/${{ matrix.artifact_name }} || cp target/aarch64-apple-darwin/release/${{ matrix.artifact_name }} artifact/${{ matrix.artifact_name }}
+            else
+              cp target/${{ matrix.target }}/release/${{ matrix.artifact_name }} artifact/${{ matrix.artifact_name }}
+            fi
+          else
+            cp target/${{ matrix.target }}/release/${{ matrix.artifact_name }} artifact/${{ matrix.artifact_name }}
+          fi
+          chmod +x artifact/${{ matrix.artifact_name }}
+          tar -czf ${{ matrix.asset_name }}.tar.gz -C artifact ${{ matrix.artifact_name }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: scripts/sync-repo-tui/${{ matrix.asset_name }}.tar.gz
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            artifacts/**/*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

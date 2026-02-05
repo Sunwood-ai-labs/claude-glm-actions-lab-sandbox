@@ -1,2 +1,3 @@
 .env
 .SourceSageAssets/Repository_summary.md
+scripts/sync-repo-tui/target/release/

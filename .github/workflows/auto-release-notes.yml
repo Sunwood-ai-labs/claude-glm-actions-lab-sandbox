@@ -71,37 +71,28 @@ jobs:
           cat /tmp/diff-stat.txt
 
       - name: Create issue for release notes
+        id: create-issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TITLE="リリースノート生成: ${{ steps.prev-tag.outputs.current_tag }}"
 
-          # Issue本文を作成（diff情報を含める）
+          # Issue本文を作成（統計情報のみ）
           cat << 'EOF' > /tmp/issue-body.md
           @claude リリースノートを生成してください。
 
           ## リリース情報
-          - タグ名: \`${CURRENT_TAG}\`
-          - バージョン: \`${CURRENT_VERSION}\`
-          - 前回のタグ: \`${PREVIOUS_TAG}\`
-
-          ## 変更されたファイル
-
-          \`\`\`
-          CHANGED_FILES
-          \`\`\`
+          - タグ名: `${CURRENT_TAG}`
+          - バージョン: `${CURRENT_VERSION}`
+          - 前回のタグ: `${PREVIOUS_TAG}`
 
           ## 変更統計
 
-          \`\`\`
+          ```
           DIFF_STAT
-          \`\`\`
+          ```
 
-          ## コード差分
-
-          \`\`\`diff
-          DIFF_CONTENT
-          \`\`\`
+          コード差分はコメントとして添付されています。
 
           ---
 
@@ -115,26 +106,72 @@ jobs:
           sed -i "s|\${CURRENT_VERSION}|${{ steps.prev-tag.outputs.current_version }}|g" /tmp/issue-body.md
           sed -i "s|\${PREVIOUS_TAG}|${{ steps.prev-tag.outputs.previous_tag }}|g" /tmp/issue-body.md
 
-          # diff内容を埋め込み（特殊文字エスケープ処理）
-          changed_files=$(cat /tmp/changed-files.txt | sed 's/`/\\`/g' | sed 's/\$/\\$/g')
-          diff_stat=$(cat /tmp/diff-stat.txt | sed 's/`/\\`/g' | sed 's/\$/\\$/g')
-          diff_content=$(cat /tmp/diff.txt | sed 's/`/\\`/g' | sed 's/\$/\\$/g')
-
-          # diffが大きい場合は制限
-          if [ ${#diff_content} -gt 100000 ]; then
-            diff_content="${diff_content:0:100000}"
-
-          (diff is truncated due to size...)"
-          fi
-
-          sed -i "s|CHANGED_FILES|$changed_files|g" /tmp/issue-body.md
+          # diff_statを埋め込み
+          diff_stat=$(cat /tmp/diff-stat.txt)
           sed -i "s|DIFF_STAT|$diff_stat|g" /tmp/issue-body.md
-          sed -i "s|DIFF_CONTENT|$diff_content|g" /tmp/issue-body.md
 
-          # Issueを作成
-          gh issue create \
+          # Issueを作成してURLを取得
+          ISSUE_URL=$(gh issue create \
             --title "$TITLE" \
             --body-file /tmp/issue-body.md \
-            --label "release-notes"
+            --label "release-notes")
 
-          echo "✅ Issue created successfully!"
+          echo "issue_url=$ISSUE_URL" >> "$GITHUB_OUTPUT"
+          echo "✅ Issue created: $ISSUE_URL"
+
+      - name: Attach diff as comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Issue番号を取得
+          ISSUE_NUMBER=$(echo "${{ steps.create-issue.outputs.issue_url }}" | grep -oE '[0-9]+$')
+
+          # diffが大きい場合は分割してコメント
+          DIFF_FILE="/tmp/diff.txt"
+          DIFF_SIZE=$(wc -c < "$DIFF_FILE")
+          MAX_SIZE=50000
+
+          if [ $DIFF_SIZE -le $MAX_SIZE ]; then
+            # 小さい場合は1つのコメントで追加
+            echo "## コード差分" > /tmp/diff-comment.md
+            echo "" >> /tmp/diff-comment.md
+            echo '```diff' >> /tmp/diff-comment.md
+            cat "$DIFF_FILE" >> /tmp/diff-comment.md
+            echo "" >> /tmp/diff-comment.md
+            echo '```' >> /tmp/diff-comment.md
+
+            gh issue comment "$ISSUE_NUMBER" --body-file /tmp/diff-comment.md
+          else
+            # 大きい場合は分割
+            echo "Large diff detected, splitting into multiple comments..."
+
+            # 変更ファイル一覧を最初のコメントに
+            echo "## コード差分" > /tmp/diff-comment.md
+            echo "" >> /tmp/diff-comment.md
+            echo "### 変更されたファイル" >> /tmp/diff-comment.md
+            echo '```' >> /tmp/diff-comment.md
+            cat /tmp/changed-files.txt >> /tmp/diff-comment.md
+            echo '```' >> /tmp/diff-comment.md
+            echo "" >> /tmp/diff-comment.md
+            echo "diff が大きいため分割されています。詳細は以下のコメントを参照してください。" >> /tmp/diff-comment.md
+
+            gh issue comment "$ISSUE_NUMBER" --body-file /tmp/diff-comment.md
+
+            # diffを分割して追加
+            split -d -l 1000 "$DIFF_FILE" /tmp/diff-part-
+
+            PART_NUM=1
+            for part in /tmp/diff-part-*; do
+              echo "## コード差分 (Part $PART_NUM)" > /tmp/part-comment.md
+              echo "" >> /tmp/part-comment.md
+              echo '```diff' >> /tmp/part-comment.md
+              cat "$part" >> /tmp/part-comment.md
+              echo "" >> /tmp/part-comment.md
+              echo '```' >> /tmp/part-comment.md
+
+              gh issue comment "$ISSUE_NUMBER" --body-file /tmp/part-comment.md
+              PART_NUM=$((PART_NUM + 1))
+            done
+          fi
+
+          echo "✅ Diff attached as comments"

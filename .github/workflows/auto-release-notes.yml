@@ -130,7 +130,7 @@ jobs:
           sed -i "s|__PREVIOUS_TAG__|${{ steps.prev-tag.outputs.previous_tag }}|g" /tmp/issue-template.md
 
           # ファイル内容を埋め込み（r コマンドを使用）
-          # これらのファイルには `${{` や `` ` `` などの特殊文字が含まれる可能性があるが、
+          # これらのファイルには GitHub Actions 式のような文字列や `` ` `` などの特殊文字が含まれる可能性があるが、
           # ファイルから読み込むのでシェル変数展開の影響を受けない
           sed -i "/__CHANGED_FILES__/r /tmp/changed-files.txt" /tmp/issue-template.md
           sed -i "/__CHANGED_FILES__/d" /tmp/issue-template.md

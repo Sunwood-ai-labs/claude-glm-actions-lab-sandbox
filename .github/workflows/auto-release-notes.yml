@@ -1,0 +1,161 @@
+name: Auto Release Notes
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+      - 'V*.*.*'
+
+# 同じタグでは同時に走らないようにする
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release-notes:
+    name: Generate Release Notes
+    runs-on: ubuntu-latest
+
+    # デフォルト設定
+    env:
+      ENABLE_AUTO_RELEASE: "true"          # 自動リリースを有効にするかどうか
+      CREATE_GITHUB_RELEASE: "true"        # GitHub Releaseを作成するかどうか
+      AGENT_SOURCE: "remote"               # エージェントファイルのソース: local または remote
+      AGENT_URL: "https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/refs/heads/main/.github/agents/release-note-generator.md"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0                    # 全履歴を取得
+
+      - name: Get previous tag
+        id: prev-tag
+        shell: bash
+        run: |
+          # タグ名を取得（v/ V プレフィックスを除去）
+          CURRENT_TAG="${{ github.ref_name }}"
+          CURRENT_VERSION="${CURRENT_TAG#v}"
+          CURRENT_VERSION="${CURRENT_VERSION#V}"
+
+          echo "current_tag=${CURRENT_TAG}" >> "$GITHUB_OUTPUT"
+          echo "current_version=${CURRENT_VERSION}" >> "$GITHUB_OUTPUT"
+
+          # 前回のタグを取得
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            echo "previous_tag=${PREV_TAG}" >> "$GITHUB_OUTPUT"
+          else
+            echo "previous_tag=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup agent directory
+        run: |
+          mkdir -p .github/agents
+
+      - name: Load release note generator agent
+        shell: bash
+        run: |
+          if [[ "${{ env.AGENT_SOURCE }}" == "remote" ]]; then
+            if [[ -z "${{ env.AGENT_URL }}" ]]; then
+              echo "ERROR: AGENT_SOURCE=remote but AGENT_URL is not set!"
+              exit 1
+            fi
+            echo "Downloading agent from remote..."
+            curl -fsSL "${{ env.AGENT_URL }}" -o .github/agents/release-note-generator.md
+          else
+            echo "Using local agent..."
+            # ローカルファイルがあるか確認
+            if [[ ! -f .github/agents/release-note-generator.md ]]; then
+              echo "ERROR: Local agent file not found!"
+              exit 1
+            fi
+          fi
+
+      - name: Generate release notes with Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          trigger_phrase: "@release-notes"
+
+          # ブランチ名を固定
+          branch_prefix: ""
+          branch_name_template: release-notes-${{ steps.prev-tag.outputs.current_tag }}
+
+          # プロンプト: リリースノートを生成
+          prompt: |
+            リリースノートを生成してください。
+
+            ## リリース情報
+            - タグ名: ${{ steps.prev-tag.outputs.current_tag }}
+            - バージョン: ${{ steps.prev-tag.outputs.current_version }}
+            ${{ steps.prev-tag.outputs.previous_tag != '' && format('- 前回のタグ: {0}', steps.prev-tag.outputs.previous_tag) || '- 前回のタグ: なし（初回リリース）' }}
+
+            ## 手順
+            1. タグ間のコード差分を収集してください（`git diff` を使用）
+            2. 変更されたファイルとコードの差分を分析してください
+            3. 追加された機能・修正されたバグ・改善点などを分類してください
+            4. 美しいリリースノートを生成してください
+            5. 生成したリリースノートを `/tmp/release-notes.md` に保存してください
+
+            ## 注意事項
+            - コミットメッセージではなく、**実際のコードの差分**を分析してください
+            - 新しく追加された関数、クラス、ファイルを特定してください
+            - 削除された機能や破壊的変更を検出してください
+            - ハイライトセクションでは、主要な変更を文学的に紹介してください
+            - 日本語と英語の両方でリリースノートを作成してください
+            - 最後に生成したリリースノートの内容をログに出力してください
+
+          # API キー
+          anthropic_api_key: ${{ secrets.ZAI_API_KEY }}
+
+        env:
+          # GLM に向ける設定
+          ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ZAI_API_KEY }}
+          API_TIMEOUT_MS: "3000000"
+          ANTHROPIC_DEFAULT_OPUS_MODEL: "glm-4.7"
+          ANTHROPIC_DEFAULT_SONNET_MODEL: "glm-4.7"
+          ANTHROPIC_DEFAULT_HAIKU_MODEL: "glm-4.5-air"
+
+          # エージェントに渡す環境変数
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ steps.prev-tag.outputs.current_tag }}
+          PREVIOUS_TAG: ${{ steps.prev-tag.outputs.previous_tag }}
+
+      - name: Display generated release notes
+        if: always()
+        run: |
+          if [[ -f /tmp/release-notes.md ]]; then
+            echo "## 📝 Generated Release Notes"
+            echo ""
+            cat /tmp/release-notes.md
+          else
+            echo "No release notes were generated."
+          fi
+
+      - name: Create GitHub Release
+        if: env.CREATE_GITHUB_RELEASE == 'true' && hashFiles('/tmp/release-notes.md') != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "${{ env.CREATE_AUTO_RELEASE }}" != "true" ]]; then
+            echo "CREATE_AUTO_RELEASE is not true. Skipping release creation."
+            exit 0
+          fi
+
+          if [[ ! -f /tmp/release-notes.md ]]; then
+            echo "ERROR: Release notes file not found!"
+            exit 1
+          fi
+
+          # リリースの作成
+          gh release create "${{ steps.prev-tag.outputs.current_tag }}" \
+            --notes-file /tmp/release-notes.md \
+            --title "${{ steps.prev-tag.outputs.current_tag }}" \
+            --latest
+
+          echo "✅ Release created successfully!"

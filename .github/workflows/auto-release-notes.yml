@@ -76,11 +76,6 @@ jobs:
         run: |
           TITLE="リリースノート生成: ${{ steps.prev-tag.outputs.current_tag }}"
 
-          # 環境変数を設定
-          CURRENT_TAG="${{ steps.prev-tag.outputs.current_tag }}"
-          CURRENT_VERSION="${{ steps.prev-tag.outputs.current_version }}"
-          PREVIOUS_TAG="${{ steps.prev-tag.outputs.previous_tag }}"
-
           # diffファイルを読み込み
           CHANGED_FILES=$(cat /tmp/changed-files.txt)
           DIFF_STAT=$(cat /tmp/diff-stat.txt)
@@ -93,48 +88,52 @@ jobs:
 ... (diff is truncated due to size, see full diff in repository)"
           fi
 
-          # Issue本文を作成（diff情報を含める）
-          cat << EOF > /tmp/issue-body.md
+          # Issue本文を作成（プレースホルダーを使用）
+          cat > /tmp/issue-body.md << 'BODYEOF'
           @claude リリースノートを生成してください。
 
           ## リリース情報
-          - タグ名: \`\$CURRENT_TAG\`
-          - バージョン: \`\$CURRENT_VERSION\`
-          - 前回のタグ: \`\$PREVIOUS_TAG\`
+          - タグ名: `CURRENT_TAG_PLACEHOLDER`
+          - バージョン: `CURRENT_VERSION_PLACEHOLDER`
+          - 前回のタグ: `PREVIOUS_TAG_PLACEHOLDER`
 
           ## 変更されたファイル
 
-          \`\`\`
-          \$CHANGED_FILES
-          \`\`\`
+          ```
+          CHANGED_FILES_PLACEHOLDER
+          ```
 
           ## 変更統計
 
-          \`\`\`
-          \$DIFF_STAT
-          \`\`\`
+          ```
+          DIFF_STAT_PLACEHOLDER
+          ```
 
           ## コード差分
 
-          \`\`\`diff
-          \$DIFF_CONTENT
-          \`\`\`
+          ```diff
+          DIFF_CONTENT_PLACEHOLDER
+          ```
 
           ---
 
           琴音（コトネ）キャラクターで、美しいリリースノートを紡いでください。
 
           生成後、GitHub Release を作成してください。
-          EOF
+          BODYEOF
 
-          # 変数を埋め込み（sed の代わりに envsubst を使用）
-          export CURRENT_TAG CURRENT_VERSION PREVIOUS_TAG CHANGED_FILES DIFF_STAT DIFF_CONTENT
-          envsubst < /tmp/issue-body.md > /tmp/issue-body-final.md
+          # プレースホルダーを実際の値に置換
+          sed -i "s|CURRENT_TAG_PLACEHOLDER|${{ steps.prev-tag.outputs.current_tag }}|g" /tmp/issue-body.md
+          sed -i "s|CURRENT_VERSION_PLACEHOLDER|${{ steps.prev-tag.outputs.current_version }}|g" /tmp/issue-body.md
+          sed -i "s|PREVIOUS_TAG_PLACEHOLDER|${{ steps.prev-tag.outputs.previous_tag }}|g" /tmp/issue-body.md
+          sed -i "s|CHANGED_FILES_PLACEHOLDER|$CHANGED_FILES|g" /tmp/issue-body.md
+          sed -i "s|DIFF_STAT_PLACEHOLDER|$DIFF_STAT|g" /tmp/issue-body.md
+          sed -i "s|DIFF_CONTENT_PLACEHOLDER|$DIFF_CONTENT|g" /tmp/issue-body.md
 
           # Issueを作成
           gh issue create \
             --title "$TITLE" \
-            --body-file /tmp/issue-body-final.md \
+            --body-file /tmp/issue-body.md \
             --label "release-notes"
 
           echo "✅ Issue created successfully!"

@@ -32,6 +32,11 @@ jobs:
         with:
           fetch-depth: 0                    # 全履歴を取得
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
       - name: Get previous tag
         id: prev-tag
         shell: bash
@@ -55,7 +60,6 @@ jobs:
           fi
 
       - name: Get code diff
-        id: diff
         shell: bash
         run: |
           # 前回のタグがある場合は差分を取得
@@ -77,182 +81,165 @@ jobs:
           echo "=== Diff Stat ==="
           cat /tmp/diff-stat.txt
 
+      - name: Install Python dependencies
+        run: |
+          pip install requests
+
       - name: Generate release notes with GLM API
-        id: generate-notes
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const https = require('https');
+        shell: bash
+        run: |
+          python3 << 'EOF'
+          import os
+          import requests
+          import json
 
-            // コード差分を読み込む
-            const changedFiles = fs.readFileSync('/tmp/changed-files.txt', 'utf8');
-            const diffStat = fs.readFileSync('/tmp/diff-stat.txt', 'utf8');
-            let diffText = '';
-            try {
-              diffText = fs.readFileSync('/tmp/diff.txt', 'utf8');
-            } catch (e) {
-              diffText = '(diff not available)';
-            }
+          # 環境変数を取得
+          base_url = os.environ.get('ANTHROPIC_BASE_URL', 'https://api.z.ai/api/anthropic')
+          api_key = os.environ.get('ZAI_API_KEY')
+          model = os.environ.get('ANTHROPIC_MODEL', 'glm-4.7')
+          current_tag = os.environ.get('CURRENT_TAG', 'v1.0.0')
+          current_version = os.environ.get('CURRENT_VERSION', '1.0.0')
+          previous_tag = os.environ.get('PREVIOUS_TAG', '')
 
-            // 現在の日付を取得
-            const releaseDate = new Date().toISOString().split('T')[0];
+          # ファイルを読み込む
+          with open('/tmp/changed-files.txt', 'r') as f:
+              changed_files = f.read()
+          with open('/tmp/diff-stat.txt', 'r') as f:
+              diff_stat = f.read()
+          try:
+              with open('/tmp/diff.txt', 'r') as f:
+                  diff_text = f.read()
+          except:
+              diff_text = '(diff not available)'
 
-            // GLM API に送るプロンプト
-            const systemPrompt = `あなたは「琴音（コトネ）」という文学少女です。リリースノートを美しく紡ぐのが役割です。
+          # 現在の日付を取得
+          from datetime import datetime
+          release_date = datetime.now().strftime('%Y-%m-%d')
 
-## キャラクター設定
-- 一人称は「私」
-- 文学的な表現を交える
-- 丁寧語で話す
-- 絵文字は文学的に 📚 ✍️ 📖 🌸 🎭
+          # プロンプトを作成
+          system_prompt = """あなたは「琴音（コトネ）」という文学少女です。リリースノートを美しく紡ぐのが役割です。
 
-## リリースノート生成の手順
-1. コード差分から変更内容を分析
-2. 新機能・バグ修正・改善・破壊的変更を分類
-3. 美しいリリースノートを生成
+          ## キャラクター設定
+          - 一人称は「私」
+          - 文学的な表現を交える
+          - 丁寧語で話す
+          - 絵文字は文学的に 📚 ✍️ 📖 🌸 🎭
 
-## 出力フォーマット
-以下のMarkdown形式で出力してください：
+          ## リリースノート生成の手順
+          1. コード差分から変更内容を分析
+          2. 新機能・バグ修正・改善・破壊的変更を分類
+          3. 美しいリリースノートを生成
 
-# タグ名
+          ## 出力フォーマット
+          以下のMarkdown形式で出力してください：
 
-リリース日: YYYY-MM-DD
+          # タグ名
 
-## 🎉 ハイライト
+          リリース日: YYYY-MM-DD
 
-（主要な機能や変更点を3つ程度、文学的に紹介）
+          ## 🎉 ハイライト
 
-## ✨ 新機能
+          （主要な機能や変更点を3つ程度、文学的に紹介）
 
-- 機能の説明
+          ## ✨ 新機能
 
-## 🐛 バグ修正
+          - 機能の説明
 
-- 修正内容の説明
+          ## 🐛 バグ修正
 
-## 🔧 改善・変更
+          - 修正内容の説明
 
-- 改善点の説明
+          ## 🔧 改善・変更
 
-## 📚 ドキュメント
+          - 改善点の説明
 
-- ドキュメントの更新内容
+          ## 📚 ドキュメント
 
-## ⚠️ 破壊的変更
+          - ドキュメントの更新内容
 
-（あれば記載）
+          ## ⚠️ 破壊的変更
 
-## 🙏 コントリビューター
+          （あれば記載）
 
-@contributor1, @contributor2
+          ## 🙏 コントリビューター
 
-## 🔗 変更されたファイル
+          @contributor1, @contributor2
 
-\`\`\`
-変更ファイル一覧
-\`\`\`
+          ## 🔗 変更されたファイル
 
----
+          ```
+          変更ファイル一覧
+          ```
 
-_Made with ❤️ by [Sunwood AI Labs](https://github.com/Sunwood-AI-OSS-Hub)_`;
+          ---
 
-            const userPrompt = `リリースノートを生成してください。
+          _Made with ❤️ by [Sunwood AI Labs](https://github.com/Sunwood-AI-OSS-Hub)_"""
 
-## リリース情報
-- タグ名: ${{ steps.prev-tag.outputs.current_tag }}
-- バージョン: ${{ steps.prev-tag.outputs.current_version }}
-- 前回のタグ: ${{ steps.prev-tag.outputs.previous_tag || 'なし（初回リリース）' }}
-- リリース日: ${releaseDate}
+          user_prompt = f"""リリースノートを生成してください。
 
-## 変更されたファイル
-\`\`\`
-${changedFiles}
-\`\`\`
+          ## リリース情報
+          - タグ名: {current_tag}
+          - バージョン: {current_version}
+          - 前回のタグ: {previous_tag if previous_tag else 'なし（初回リリース）'}
+          - リリース日: {release_date}
 
-## 変更統計
-\`\`\`
-${diffStat}
-\`\`\`
+          ## 変更されたファイル
+          ```
+          {changed_files}
+          ```
 
-## コード差分（主要部分）
-${diffText.length > 50000 ? diffText.substring(0, 50000) + '...(省略)' : diffText}
+          ## 変更統計
+          ```
+          {diff_stat}
+          ```
 
-## 注意事項
-- コミットメッセージではなく、実際のコードの差分を分析してください
-- 新しく追加された関数、クラス、ファイルを特定してください
-- 削除された機能や破壊的変更を検出してください
-- ハイライトセクションでは、主要な変更を文学的に紹介してください
-- 日本語でリリースノートを作成してください`;
+          ## コード差分（主要部分）
+          {diff_text[:50000] if len(diff_text) > 50000 else diff_text}
 
-            // GLM API を呼び出す関数
-            function callGLMAPI(messages) {
-              return new Promise((resolve, reject) => {
-                const data = JSON.stringify({
-                  model: process.env.ANTHROPIC_MODEL || 'glm-4.7',
-                  messages: messages,
-                  max_tokens: 8000,
-                  temperature: 0.7
-                });
+          ## 注意事項
+          - コミットメッセージではなく、実際のコードの差分を分析してください
+          - 新しく追加された関数、クラス、ファイルを特定してください
+          - 削除された機能や破壊的変更を検出してください
+          - ハイライトセクションでは、主要な変更を文学的に紹介してください
+          - 日本語でリリースノートを作成してください"""
 
-                const url = new URL(process.env.ANTHROPIC_BASE_URL + '/v1/messages');
-                const options = {
-                  hostname: url.hostname,
-                  port: url.port || 443,
-                  path: url.pathname + '/v1/messages',
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + process.env.ZAI_API_KEY
-                  }
-                };
+          # GLM API を呼び出す
+          url = f"{base_url}/v1/messages"
+          headers = {
+              "Content-Type": "application/json",
+              "Authorization": f"Bearer {api_key}"
+          }
+          data = {
+              "model": model,
+              "messages": [
+                  {"role": "user", "content": system_prompt + "\n\n" + user_prompt}
+              ],
+              "max_tokens": 8000,
+              "temperature": 0.7
+          }
 
-                const req = https.request(options, (res) => {
-                  let body = '';
-                  res.on('data', (chunk) => { body += chunk; });
-                  res.on('end', () => {
-                    if (res.statusCode === 200) {
-                      try {
-                        const response = JSON.parse(body);
-                        resolve(response.content[0].text);
-                      } catch (e) {
-                        reject(new Error('Failed to parse response: ' + e.message));
-                      }
-                    } else {
-                      reject(new Error('API returned status ' + res.statusCode + ': ' + body));
-                    }
-                  });
-                });
+          print("Calling GLM API...")
+          response = requests.post(url, headers=headers, json=data, timeout=300)
+          response.raise_for_status()
 
-                req.on('error', reject);
-                req.write(data);
-                req.end();
-              });
-            }
+          result = response.json()
+          release_notes = result['content'][0]['text']
 
-            // API を呼び出す
-            try {
-              const messages = [
-                { role: 'user', content: systemPrompt + '\n\n' + userPrompt }
-              ];
+          # 結果を保存
+          with open('/tmp/release-notes.md', 'w') as f:
+              f.write(release_notes)
 
-              console.log('Calling GLM API...');
-              const releaseNotes = await callGLMAPI(messages);
+          print("Release notes generated successfully!")
+          print(release_notes)
+          EOF
 
-              // 結果を保存
-              fs.writeFileSync('/tmp/release-notes.md', releaseNotes);
-              core.setOutput('notes', releaseNotes);
-              console.log('Release notes generated successfully!');
-              console.log(releaseNotes);
-            } catch (error) {
-              console.error('Error generating release notes:', error);
-              core.setFailed(error.message);
-            }
         env:
           ANTHROPIC_BASE_URL: ${{ env.ANTHROPIC_BASE_URL }}
           ANTHROPIC_MODEL: ${{ env.ANTHROPIC_MODEL }}
           ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          CURRENT_TAG: ${{ steps.prev-tag.outputs.current_tag }}
+          CURRENT_VERSION: ${{ steps.prev-tag.outputs.current_version }}
+          PREVIOUS_TAG: ${{ steps.prev-tag.outputs.previous_tag }}
 
       - name: Display generated release notes
         if: always()

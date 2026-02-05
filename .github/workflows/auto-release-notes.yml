@@ -140,8 +140,16 @@ jobs:
           sed -i '/DIFF_CONTENT_VAL/d' /tmp/issue-template.md
 
           # Issueを作成
-          gh issue create \
+          ISSUE_URL=$(gh issue create \
             --title "$TITLE" \
-            --body-file /tmp/issue-template.md
+            --body-file /tmp/issue-template.md)
 
-          echo "✅ Issue created successfully!"
+          echo "✅ Issue created: $ISSUE_URL"
+
+          # Issue番号を取得
+          ISSUE_NUMBER=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
+
+          # @claude メンションを追加して responder をトリガー
+          gh issue comment "$ISSUE_NUMBER" --body "@claude"
+
+          echo "✅ @claude comment added to trigger responder"

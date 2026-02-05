@@ -13,29 +13,18 @@ concurrency:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
-  release-notes:
-    name: Generate Release Notes
+  create-issue:
+    name: Create Release Note Request
     runs-on: ubuntu-latest
-
-    # デフォルト設定
-    env:
-      ENABLE_AUTO_RELEASE: "true"          # 自動リリースを有効にするかどうか
-      CREATE_GITHUB_RELEASE: "true"        # GitHub Releaseを作成するかどうか
-      ANTHROPIC_BASE_URL: "https://api.z.ai/api/anthropic"
-      ANTHROPIC_MODEL: "glm-4.7"
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0                    # 全履歴を取得
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
 
       - name: Get previous tag
         id: prev-tag
@@ -81,203 +70,71 @@ jobs:
           echo "=== Diff Stat ==="
           cat /tmp/diff-stat.txt
 
-      - name: Install Python dependencies
-        run: |
-          pip install requests
-
-      - name: Generate release notes with GLM API
-        shell: bash
-        run: |
-          python3 << 'EOF'
-          import os
-          import requests
-          import json
-
-          # 環境変数を取得
-          base_url = os.environ.get('ANTHROPIC_BASE_URL', 'https://api.z.ai/api/anthropic')
-          api_key = os.environ.get('ZAI_API_KEY')
-          model = os.environ.get('ANTHROPIC_MODEL', 'glm-4.7')
-          current_tag = os.environ.get('CURRENT_TAG', 'v1.0.0')
-          current_version = os.environ.get('CURRENT_VERSION', '1.0.0')
-          previous_tag = os.environ.get('PREVIOUS_TAG', '')
-
-          # ファイルを読み込む
-          with open('/tmp/changed-files.txt', 'r') as f:
-              changed_files = f.read()
-          with open('/tmp/diff-stat.txt', 'r') as f:
-              diff_stat = f.read()
-          try:
-              with open('/tmp/diff.txt', 'r') as f:
-                  diff_text = f.read()
-          except:
-              diff_text = '(diff not available)'
-
-          # 現在の日付を取得
-          from datetime import datetime
-          release_date = datetime.now().strftime('%Y-%m-%d')
-
-          # プロンプトを作成
-          system_prompt = """あなたは「琴音（コトネ）」という文学少女です。リリースノートを美しく紡ぐのが役割です。
-
-          ## キャラクター設定
-          - 一人称は「私」
-          - 文学的な表現を交える
-          - 丁寧語で話す
-          - 絵文字は文学的に 📚 ✍️ 📖 🌸 🎭
-
-          ## リリースノート生成の手順
-          1. コード差分から変更内容を分析
-          2. 新機能・バグ修正・改善・破壊的変更を分類
-          3. 美しいリリースノートを生成
-
-          ## 出力フォーマット
-          以下のMarkdown形式で出力してください：
-
-          # タグ名
-
-          リリース日: YYYY-MM-DD
-
-          ## 🎉 ハイライト
-
-          （主要な機能や変更点を3つ程度、文学的に紹介）
-
-          ## ✨ 新機能
-
-          - 機能の説明
-
-          ## 🐛 バグ修正
-
-          - 修正内容の説明
-
-          ## 🔧 改善・変更
-
-          - 改善点の説明
-
-          ## 📚 ドキュメント
-
-          - ドキュメントの更新内容
-
-          ## ⚠️ 破壊的変更
-
-          （あれば記載）
-
-          ## 🙏 コントリビューター
-
-          @contributor1, @contributor2
-
-          ## 🔗 変更されたファイル
-
-          ```
-          変更ファイル一覧
-          ```
-
-          ---
-
-          _Made with ❤️ by [Sunwood AI Labs](https://github.com/Sunwood-AI-OSS-Hub)_"""
-
-          user_prompt = f"""リリースノートを生成してください。
-
-          ## リリース情報
-          - タグ名: {current_tag}
-          - バージョン: {current_version}
-          - 前回のタグ: {previous_tag if previous_tag else 'なし（初回リリース）'}
-          - リリース日: {release_date}
-
-          ## 変更されたファイル
-          ```
-          {changed_files}
-          ```
-
-          ## 変更統計
-          ```
-          {diff_stat}
-          ```
-
-          ## コード差分（主要部分）
-          {diff_text[:50000] if len(diff_text) > 50000 else diff_text}
-
-          ## 注意事項
-          - コミットメッセージではなく、実際のコードの差分を分析してください
-          - 新しく追加された関数、クラス、ファイルを特定してください
-          - 削除された機能や破壊的変更を検出してください
-          - ハイライトセクションでは、主要な変更を文学的に紹介してください
-          - 日本語でリリースノートを作成してください"""
-
-          # GLM API を呼び出す
-          url = f"{base_url}/v1/messages"
-          headers = {
-              "Content-Type": "application/json",
-              "Authorization": f"Bearer {api_key}"
-          }
-          data = {
-              "model": model,
-              "messages": [
-                  {"role": "user", "content": system_prompt + "\n\n" + user_prompt}
-              ],
-              "max_tokens": 8000,
-              "temperature": 0.7
-          }
-
-          print("Calling GLM API...")
-          response = requests.post(url, headers=headers, json=data, timeout=300)
-          response.raise_for_status()
-
-          result = response.json()
-          release_notes = result['content'][0]['text']
-
-          # 結果を保存
-          with open('/tmp/release-notes.md', 'w') as f:
-              f.write(release_notes)
-
-          print("Release notes generated successfully!")
-          print(release_notes)
-          EOF
-
-        env:
-          ANTHROPIC_BASE_URL: ${{ env.ANTHROPIC_BASE_URL }}
-          ANTHROPIC_MODEL: ${{ env.ANTHROPIC_MODEL }}
-          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
-          CURRENT_TAG: ${{ steps.prev-tag.outputs.current_tag }}
-          CURRENT_VERSION: ${{ steps.prev-tag.outputs.current_version }}
-          PREVIOUS_TAG: ${{ steps.prev-tag.outputs.previous_tag }}
-
-      - name: Check release notes file
-        id: check-notes
-        run: |
-          if [[ -f /tmp/release-notes.md ]]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "✅ Release notes file exists"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "❌ Release notes file not found"
-          fi
-
-      - name: Display generated release notes
-        if: steps.check-notes.outputs.exists == 'true'
-        run: |
-          echo "## 📝 Generated Release Notes"
-          echo ""
-          cat /tmp/release-notes.md
-
-      - name: Create GitHub Release
-        if: env.CREATE_GITHUB_RELEASE == 'true' && steps.check-notes.outputs.exists == 'true'
+      - name: Create issue for release notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [[ "${{ env.ENABLE_AUTO_RELEASE }}" != "true" ]]; then
-            echo "ENABLE_AUTO_RELEASE is not true. Skipping release creation."
-            exit 0
+          TITLE="リリースノート生成: ${{ steps.prev-tag.outputs.current_tag }}"
+
+          # Issue本文を作成（diff情報を含める）
+          cat << 'EOF' > /tmp/issue-body.md
+          @claude リリースノートを生成してください。
+
+          ## リリース情報
+          - タグ名: \`${CURRENT_TAG}\`
+          - バージョン: \`${CURRENT_VERSION}\`
+          - 前回のタグ: \`${PREVIOUS_TAG}\`
+
+          ## 変更されたファイル
+
+          \`\`\`
+          CHANGED_FILES
+          \`\`\`
+
+          ## 変更統計
+
+          \`\`\`
+          DIFF_STAT
+          \`\`\`
+
+          ## コード差分
+
+          \`\`\`diff
+          DIFF_CONTENT
+          \`\`\`
+
+          ---
+
+          琴音（コトネ）キャラクターで、美しいリリースノートを紡いでください。
+
+          生成後、GitHub Release を作成してください。
+          EOF
+
+          # 環境変数とdiff内容を置換
+          sed -i "s|\${CURRENT_TAG}|${{ steps.prev-tag.outputs.current_tag }}|g" /tmp/issue-body.md
+          sed -i "s|\${CURRENT_VERSION}|${{ steps.prev-tag.outputs.current_version }}|g" /tmp/issue-body.md
+          sed -i "s|\${PREVIOUS_TAG}|${{ steps.prev-tag.outputs.previous_tag }}|g" /tmp/issue-body.md
+
+          # diff内容を埋め込み（特殊文字エスケープ処理）
+          changed_files=$(cat /tmp/changed-files.txt | sed 's/`/\\`/g' | sed 's/\$/\\$/g')
+          diff_stat=$(cat /tmp/diff-stat.txt | sed 's/`/\\`/g' | sed 's/\$/\\$/g')
+          diff_content=$(cat /tmp/diff.txt | sed 's/`/\\`/g' | sed 's/\$/\\$/g')
+
+          # diffが大きい場合は制限
+          if [ ${#diff_content} -gt 100000 ]; then
+            diff_content="${diff_content:0:100000}"
+
+          (diff is truncated due to size...)"
           fi
 
-          if [[ ! -f /tmp/release-notes.md ]]; then
-            echo "ERROR: Release notes file not found!"
-            exit 1
-          fi
+          sed -i "s|CHANGED_FILES|$changed_files|g" /tmp/issue-body.md
+          sed -i "s|DIFF_STAT|$diff_stat|g" /tmp/issue-body.md
+          sed -i "s|DIFF_CONTENT|$diff_content|g" /tmp/issue-body.md
 
-          # リリースの作成
-          gh release create "${{ steps.prev-tag.outputs.current_tag }}" \
-            --notes-file /tmp/release-notes.md \
-            --title "${{ steps.prev-tag.outputs.current_tag }}" \
-            --latest
+          # Issueを作成
+          gh issue create \
+            --title "$TITLE" \
+            --body-file /tmp/issue-body.md \
+            --label "release-notes"
 
-          echo "✅ Release created successfully!"
+          echo "✅ Issue created successfully!"

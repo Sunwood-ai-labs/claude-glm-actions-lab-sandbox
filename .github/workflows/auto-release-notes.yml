@@ -23,8 +23,8 @@ jobs:
     env:
       ENABLE_AUTO_RELEASE: "true"          # 自動リリースを有効にするかどうか
       CREATE_GITHUB_RELEASE: "true"        # GitHub Releaseを作成するかどうか
-      AGENT_SOURCE: "remote"               # エージェントファイルのソース: local または remote
-      AGENT_URL: "https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/refs/heads/main/.github/agents/release-note-generator.md"
+      ANTHROPIC_BASE_URL: "https://api.z.ai/api/anthropic"
+      ANTHROPIC_MODEL: "glm-4.7"
 
     steps:
       - name: Checkout code
@@ -48,83 +48,211 @@ jobs:
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           if [ -n "$PREV_TAG" ]; then
             echo "previous_tag=${PREV_TAG}" >> "$GITHUB_OUTPUT"
+            echo "Found previous tag: ${PREV_TAG}"
           else
             echo "previous_tag=" >> "$GITHUB_OUTPUT"
+            echo "No previous tag found (first release)"
           fi
 
-      - name: Setup agent directory
-        run: |
-          mkdir -p .github/agents
-
-      - name: Load release note generator agent
+      - name: Get code diff
+        id: diff
         shell: bash
         run: |
-          if [[ "${{ env.AGENT_SOURCE }}" == "remote" ]]; then
-            if [[ -z "${{ env.AGENT_URL }}" ]]; then
-              echo "ERROR: AGENT_SOURCE=remote but AGENT_URL is not set!"
-              exit 1
-            fi
-            echo "Downloading agent from remote..."
-            curl -fsSL "${{ env.AGENT_URL }}" -o .github/agents/release-note-generator.md
+          # 前回のタグがある場合は差分を取得
+          if [ -n "${{ steps.prev-tag.outputs.previous_tag }}" ]; then
+            echo "Getting diff from ${{ steps.prev-tag.outputs.previous_tag }} to ${{ steps.prev-tag.outputs.current_tag }}..."
+            git diff ${{ steps.prev-tag.outputs.previous_tag }}..${{ steps.prev-tag.outputs.current_tag }} --stat > /tmp/diff-stat.txt
+            git diff ${{ steps.prev-tag.outputs.previous_tag }}..${{ steps.prev-tag.outputs.current_tag }} > /tmp/diff.txt
+            git diff --name-only ${{ steps.prev-tag.outputs.previous_tag }}..${{ steps.prev-tag.outputs.current_tag }} > /tmp/changed-files.txt
           else
-            echo "Using local agent..."
-            # ローカルファイルがあるか確認
-            if [[ ! -f .github/agents/release-note-generator.md ]]; then
-              echo "ERROR: Local agent file not found!"
-              exit 1
-            fi
+            echo "Getting all files for first release..."
+            git ls-files > /tmp/changed-files.txt
+            echo "No diff available for first release" > /tmp/diff-stat.txt
+            echo "First release - no diff" > /tmp/diff.txt
           fi
 
-      - name: Generate release notes with Claude Code
-        id: claude
-        uses: anthropics/claude-code-action@v1
+          echo "=== Changed Files ==="
+          cat /tmp/changed-files.txt
+          echo ""
+          echo "=== Diff Stat ==="
+          cat /tmp/diff-stat.txt
+
+      - name: Generate release notes with GLM API
+        id: generate-notes
+        uses: actions/github-script@v7
         with:
-          trigger_phrase: "@release-notes"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const https = require('https');
 
-          # ブランチ名を固定
-          branch_prefix: ""
-          branch_name_template: release-notes-${{ steps.prev-tag.outputs.current_tag }}
+            // コード差分を読み込む
+            const changedFiles = fs.readFileSync('/tmp/changed-files.txt', 'utf8');
+            const diffStat = fs.readFileSync('/tmp/diff-stat.txt', 'utf8');
+            let diffText = '';
+            try {
+              diffText = fs.readFileSync('/tmp/diff.txt', 'utf8');
+            } catch (e) {
+              diffText = '(diff not available)';
+            }
 
-          # プロンプト: リリースノートを生成
-          prompt: |
-            リリースノートを生成してください。
+            // 現在の日付を取得
+            const releaseDate = new Date().toISOString().split('T')[0];
 
-            ## リリース情報
-            - タグ名: ${{ steps.prev-tag.outputs.current_tag }}
-            - バージョン: ${{ steps.prev-tag.outputs.current_version }}
-            ${{ steps.prev-tag.outputs.previous_tag != '' && format('- 前回のタグ: {0}', steps.prev-tag.outputs.previous_tag) || '- 前回のタグ: なし（初回リリース）' }}
+            // GLM API に送るプロンプト
+            const systemPrompt = `あなたは「琴音（コトネ）」という文学少女です。リリースノートを美しく紡ぐのが役割です。
 
-            ## 手順
-            1. タグ間のコード差分を収集してください（`git diff` を使用）
-            2. 変更されたファイルとコードの差分を分析してください
-            3. 追加された機能・修正されたバグ・改善点などを分類してください
-            4. 美しいリリースノートを生成してください
-            5. 生成したリリースノートを `/tmp/release-notes.md` に保存してください
+## キャラクター設定
+- 一人称は「私」
+- 文学的な表現を交える
+- 丁寧語で話す
+- 絵文字は文学的に 📚 ✍️ 📖 🌸 🎭
 
-            ## 注意事項
-            - コミットメッセージではなく、**実際のコードの差分**を分析してください
-            - 新しく追加された関数、クラス、ファイルを特定してください
-            - 削除された機能や破壊的変更を検出してください
-            - ハイライトセクションでは、主要な変更を文学的に紹介してください
-            - 日本語と英語の両方でリリースノートを作成してください
-            - 最後に生成したリリースノートの内容をログに出力してください
+## リリースノート生成の手順
+1. コード差分から変更内容を分析
+2. 新機能・バグ修正・改善・破壊的変更を分類
+3. 美しいリリースノートを生成
 
-          # API キー
-          anthropic_api_key: ${{ secrets.ZAI_API_KEY }}
+## 出力フォーマット
+以下のMarkdown形式で出力してください：
 
+# タグ名
+
+リリース日: YYYY-MM-DD
+
+## 🎉 ハイライト
+
+（主要な機能や変更点を3つ程度、文学的に紹介）
+
+## ✨ 新機能
+
+- 機能の説明
+
+## 🐛 バグ修正
+
+- 修正内容の説明
+
+## 🔧 改善・変更
+
+- 改善点の説明
+
+## 📚 ドキュメント
+
+- ドキュメントの更新内容
+
+## ⚠️ 破壊的変更
+
+（あれば記載）
+
+## 🙏 コントリビューター
+
+@contributor1, @contributor2
+
+## 🔗 変更されたファイル
+
+\`\`\`
+変更ファイル一覧
+\`\`\`
+
+---
+
+_Made with ❤️ by [Sunwood AI Labs](https://github.com/Sunwood-AI-OSS-Hub)_`;
+
+            const userPrompt = `リリースノートを生成してください。
+
+## リリース情報
+- タグ名: ${{ steps.prev-tag.outputs.current_tag }}
+- バージョン: ${{ steps.prev-tag.outputs.current_version }}
+- 前回のタグ: ${{ steps.prev-tag.outputs.previous_tag || 'なし（初回リリース）' }}
+- リリース日: ${releaseDate}
+
+## 変更されたファイル
+\`\`\`
+${changedFiles}
+\`\`\`
+
+## 変更統計
+\`\`\`
+${diffStat}
+\`\`\`
+
+## コード差分（主要部分）
+${diffText.length > 50000 ? diffText.substring(0, 50000) + '...(省略)' : diffText}
+
+## 注意事項
+- コミットメッセージではなく、実際のコードの差分を分析してください
+- 新しく追加された関数、クラス、ファイルを特定してください
+- 削除された機能や破壊的変更を検出してください
+- ハイライトセクションでは、主要な変更を文学的に紹介してください
+- 日本語でリリースノートを作成してください`;
+
+            // GLM API を呼び出す関数
+            function callGLMAPI(messages) {
+              return new Promise((resolve, reject) => {
+                const data = JSON.stringify({
+                  model: process.env.ANTHROPIC_MODEL || 'glm-4.7',
+                  messages: messages,
+                  max_tokens: 8000,
+                  temperature: 0.7
+                });
+
+                const url = new URL(process.env.ANTHROPIC_BASE_URL + '/v1/messages');
+                const options = {
+                  hostname: url.hostname,
+                  port: url.port || 443,
+                  path: url.pathname + '/v1/messages',
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + process.env.ZAI_API_KEY
+                  }
+                };
+
+                const req = https.request(options, (res) => {
+                  let body = '';
+                  res.on('data', (chunk) => { body += chunk; });
+                  res.on('end', () => {
+                    if (res.statusCode === 200) {
+                      try {
+                        const response = JSON.parse(body);
+                        resolve(response.content[0].text);
+                      } catch (e) {
+                        reject(new Error('Failed to parse response: ' + e.message));
+                      }
+                    } else {
+                      reject(new Error('API returned status ' + res.statusCode + ': ' + body));
+                    }
+                  });
+                });
+
+                req.on('error', reject);
+                req.write(data);
+                req.end();
+              });
+            }
+
+            // API を呼び出す
+            try {
+              const messages = [
+                { role: 'user', content: systemPrompt + '\n\n' + userPrompt }
+              ];
+
+              console.log('Calling GLM API...');
+              const releaseNotes = await callGLMAPI(messages);
+
+              // 結果を保存
+              fs.writeFileSync('/tmp/release-notes.md', releaseNotes);
+              core.setOutput('notes', releaseNotes);
+              console.log('Release notes generated successfully!');
+              console.log(releaseNotes);
+            } catch (error) {
+              console.error('Error generating release notes:', error);
+              core.setFailed(error.message);
+            }
         env:
-          # GLM に向ける設定
-          ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic
-          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ZAI_API_KEY }}
-          API_TIMEOUT_MS: "3000000"
-          ANTHROPIC_DEFAULT_OPUS_MODEL: "glm-4.7"
-          ANTHROPIC_DEFAULT_SONNET_MODEL: "glm-4.7"
-          ANTHROPIC_DEFAULT_HAIKU_MODEL: "glm-4.5-air"
-
-          # エージェントに渡す環境変数
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_REF_NAME: ${{ steps.prev-tag.outputs.current_tag }}
-          PREVIOUS_TAG: ${{ steps.prev-tag.outputs.previous_tag }}
+          ANTHROPIC_BASE_URL: ${{ env.ANTHROPIC_BASE_URL }}
+          ANTHROPIC_MODEL: ${{ env.ANTHROPIC_MODEL }}
+          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
 
       - name: Display generated release notes
         if: always()
@@ -142,8 +270,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [[ "${{ env.CREATE_AUTO_RELEASE }}" != "true" ]]; then
-            echo "CREATE_AUTO_RELEASE is not true. Skipping release creation."
+          if [[ "${{ env.ENABLE_AUTO_RELEASE }}" != "true" ]]; then
+            echo "ENABLE_AUTO_RELEASE is not true. Skipping release creation."
             exit 0
           fi
 

@@ -28,8 +28,9 @@ jobs:
     env:
       CREATE_AUTO_PR: "true"              # Issueからのトリガー時に自動でPRを作成するかどうか
       INCLUDE_TASK_SUMMARY: "true"        # タスクサマリー（---より後ろの報告内容）を含めるかどうか
-      SCRIPT_SOURCE: "remote"             # スクリプトのソース: local または remote
-      SCRIPT_URL: "https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/refs/heads/main/.github/scripts/create-pr.py"
+      SOURCE_LOCATION: "remote"           # スクリプトのソース: local または remote
+      SOURCE_URL: "https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/refs/heads/main/.github/scripts/create-pr.py"
+      LOCAL_PATH: '.github/scripts/create-pr.py'
 
     permissions:
       contents: write
@@ -138,19 +139,19 @@ jobs:
           fi
 
           # スクリプトの実行（ローカル/リモート切り替え）
-          if [[ "${{ env.SCRIPT_SOURCE }}" == "remote" ]]; then
-            if [[ -z "${{ env.SCRIPT_URL }}" ]]; then
-              echo "ERROR: SCRIPT_SOURCE=remote but SCRIPT_URL is not set!"
+          if [[ "${{ env.SOURCE_LOCATION }}" == "remote" ]]; then
+            if [[ -z "${{ env.SOURCE_URL }}" ]]; then
+              echo "ERROR: SOURCE_LOCATION=remote but SOURCE_URL is not set!"
               exit 1
             fi
             echo "Downloading script from remote..."
-            curl -fsSL "${{ env.SCRIPT_URL }}" -o /tmp/create-pr.py
+            curl -fsSL "${{ env.SOURCE_URL }}" -o /tmp/create-pr.py
             python3 /tmp/create-pr.py \
               "${{ steps.branch.outputs.name }}" \
               "${{ github.event.issue.number }}"
           else
             echo "Using local script..."
-            python3 .github/scripts/create-pr.py \
+            python3 "${{ env.LOCAL_PATH }}" \
               "${{ steps.branch.outputs.name }}" \
               "${{ github.event.issue.number }}"
           fi

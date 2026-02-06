@@ -18,6 +18,9 @@ permissions:
 env:
   FAL_KEY: ${{ secrets.FAL_KEY }}
   HEADER_MODE: ${{ vars.HEADER_MODE || 'fal' }}  # fal or svg
+  SOURCE_LOCATION: ${{ vars.SOURCE_LOCATION || 'remote' }}  # ソースのロケーション: local または remote
+  SOURCE_URL: ${{ vars.SOURCE_URL || 'https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/refs/heads/main/.github/scripts/generate-header.py' }}
+  LOCAL_PATH: '.github/scripts/generate-header.py'
 
 jobs:
   generate-header:
@@ -53,7 +56,8 @@ jobs:
         id: generate
         env:
           FAL_KEY: ${{ secrets.FAL_KEY }}
-          USE_LOCAL_SCRIPT: ${{ vars.USE_LOCAL_SCRIPT || 'false' }}
+          SOURCE_LOCATION: ${{ vars.SOURCE_LOCATION || 'remote' }}
+          SOURCE_URL: ${{ vars.SOURCE_URL || 'https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/refs/heads/main/.github/scripts/generate-header.py' }}
           HEADER_MODE: ${{ vars.HEADER_MODE || 'fal' }}
         run: |
           HEADER_DIR="./assets/release-headers"
@@ -72,8 +76,8 @@ jobs:
 
           HEADER_PATH="${HEADER_DIR}/header-${{ steps.tag-info.outputs.tag }}.${HEADER_EXT}"
 
-          # USE_LOCAL_SCRIPTでローカル/リモートを切り替えニャ！🐱
-          if [ "$USE_LOCAL_SCRIPT" = "true" ]; then
+          # SOURCE_LOCATIONでローカル/リモートを切り替えニャ！🐱
+          if [ "$SOURCE_LOCATION" = "local" ]; then
             # ローカルスクリプトを実行
             echo "📁 Using local script..."
             python3 .github/scripts/generate-header.py \
@@ -84,7 +88,7 @@ jobs:
           else
             # リモートスクリプトを実行（デフォルト）
             echo "🌐 Using remote script..."
-            curl -s https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/main/.github/scripts/generate-header.py \
+            curl -s "${SOURCE_URL}" \
               | python3 - --tag "${{ steps.tag-info.outputs.tag }}" --theme auto ${MODE_ARG} --output "${HEADER_PATH}"
           fi
 

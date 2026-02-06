@@ -10,8 +10,9 @@ permissions:
 
 env:
   ENABLE_PR_AUTO_COMMENT: ${{ vars.ENABLE_PR_AUTO_COMMENT || 'true' }}
-  TEMPLATE_SOURCE: ${{ vars.TEMPLATE_SOURCE || 'remote' }}  # テンプレートのソース: local または remote
-  TEMPLATE_URL: ${{ vars.TEMPLATE_URL || 'https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/refs/heads/main/.github/templates/pr-comment.md' }}
+  SOURCE_LOCATION: ${{ vars.SOURCE_LOCATION || 'remote' }}  # ソースのロケーション: local または remote
+  SOURCE_URL: ${{ vars.SOURCE_URL || 'https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/refs/heads/main/.github/templates/pr-comment.md' }}
+  LOCAL_PATH: '.github/templates/pr-comment.md'
 
 jobs:
   auto-comment:
@@ -30,22 +31,22 @@ jobs:
             }
 
             let commentBody;
-            const templateSource = '${{ env.TEMPLATE_SOURCE }}';
+            const sourceLocation = '${{ env.SOURCE_LOCATION }}';
 
-            if (templateSource === 'remote') {
+            if (sourceLocation === 'remote') {
               // リモートからテンプレートをダウンロード
               console.log('Downloading template from remote...');
-              const templateUrl = '${{ env.TEMPLATE_URL }}';
-              if (!templateUrl) {
-                throw new Error('TEMPLATE_SOURCE=remote but TEMPLATE_URL is not set!');
+              const sourceUrl = '${{ env.SOURCE_URL }}';
+              if (!sourceUrl) {
+                throw new Error('SOURCE_LOCATION=remote but SOURCE_URL is not set!');
               }
-              const response = await fetch(templateUrl);
+              const response = await fetch(sourceUrl);
               commentBody = await response.text();
             } else {
               // ローカルからテンプレートを読み込み
               console.log('Using local template...');
               const fs = require('fs');
-              commentBody = fs.readFileSync('.github/templates/pr-comment.md', 'utf8');
+              commentBody = fs.readFileSync('${{ env.LOCAL_PATH }}', 'utf8');
             }
 
             await github.rest.issues.createComment({

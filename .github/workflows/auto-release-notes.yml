@@ -58,7 +58,7 @@ jobs:
           FAL_KEY: ${{ secrets.FAL_KEY }}
           SOURCE_LOCATION: ${{ vars.SOURCE_LOCATION || 'remote' }}
           SOURCE_URL: ${{ vars.SOURCE_URL || 'https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/refs/heads/main/.github/scripts/generate-header.py' }}
-          HEADER_MODE: ${{ vars.HEADER_MODE || 'fal' }}
+          HEADER_MODE: ${{ vars.HEADER_MODE || 'svg' }}
         run: |
           HEADER_DIR="./assets/release-headers"
           mkdir -p "${HEADER_DIR}"
@@ -212,7 +212,7 @@ jobs:
 
           # Issue本文テンプレートを作成（一重引用符で囲んで変数展開を防ぐ）
           cat > /tmp/issue-template.md << 'TEMPLATEEOF'
-          リリースノートを生成してください。
+          @claude リリースノートを生成してください。
 
           ## リリース情報
           - タグ名: `__CURRENT_TAG__`

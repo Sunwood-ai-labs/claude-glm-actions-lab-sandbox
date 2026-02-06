@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODO App ✨</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📝 TODOリスト</h1>
+
+        <div class="input-area">
+            <input type="text" id="todoInput" placeholder="新しいタスクを追加...✨" maxlength="100">
+            <button id="addBtn">追加💖</button>
+        </div>
+
+        <div class="stats">
+            <span id="totalCount">全0件</span>
+            <span id="doneCount">完了0件</span>
+            <span id="remainCount">残り0件</span>
+        </div>
+
+        <ul id="todoList" class="todo-list">
+            <!-- タスクがここに追加されるよー -->
+        </ul>
+
+        <div class="footer">
+            <button id="clearDoneBtn">完了済みを削除🗑️</button>
+            <button id="clearAllBtn">全部削�除💥</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

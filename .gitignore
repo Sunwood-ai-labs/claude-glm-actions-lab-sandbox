@@ -2,3 +2,4 @@
 .SourceSageAssets/Repository_summary.md
 scripts/sync-repo-tui/target/release/
 tmp/
+.github/scripts/__pycache__/

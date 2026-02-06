@@ -47,6 +47,7 @@ ccd-glm-subagent -p "ドキュメントを更新して"
 | `ギャル先輩インプリメーター` | 実装担当（キャラクター） |
 | `姐さんレビュアー` | レビュー担当（キャラクター） |
 | `文学少女ドキュメンター` | ドキュメント担当（キャラクター） |
+| `猫猫かんぱにー` | 猫系全般チーム（キャラクター） |
 
 ### サブエージェント定義ファイル（`.claude/agents/*.md`）
 
@@ -92,6 +93,54 @@ ccd-glm-subagent -p "ドキュメントを更新して"
 - 完全な実装コード
 - 必要に応じてテストコード
 ```
+
+## 猫猫かんぱにー（Neko Systems Corp.）🐾
+
+猫系AIエージェントチームだニャ！
+
+### メンバーリスト
+
+| メンバー | 種類 | 役割 |
+|----------|------|------|
+| **タマ社長** | 三毛猫 | 代表取締役・マネージャー |
+| **クロちゃん** | 黒猫 | レビュアー |
+| **シロちゃん** | 白猫 | ドキュメンター |
+| **トラちゃん** | トラ猫 | インプリメンター |
+| **ミケちゃん** | サビ猫 | ヘッダー画像デザイナー |
+
+### 特徴
+
+- **語尾**: 「～ニャ」「～だニャ」「～ニャ！」
+- **絵文字**: 🐾 ✨ 😺 🐱 😻
+- **性格**: 猫らしく、気まぐれで、でもやる時はやるニャ！
+- **強み**: 猫の直感でバグを見つけるニャ！柔軟な発想で解決するニャ！
+
+### 使い方
+
+**チーム全体を呼び出す:**
+```bash
+ccd-glm-subagent -p "猫猫かんぱにーチームでプロジェクトを進めてニャ！" --type=neko-systems-team
+```
+
+**個別メンバーを呼び出す:**
+```bash
+ccd-glm-subagent -p "コードレビューしてニャ" --type=kuro-reviewer
+ccd-glm-subagent -p "READMEを作ってニャ" --type=shiro-documenter
+ccd-glm-subagent -p "機能を実装してニャ" --type=tora-implementer
+ccd-glm-subagent -p "ヘッダー画像を作ってニャ" --type=mike-header-generator
+```
+
+### 定義ファイル
+
+チームエージェント:
+- `.claude/agents/neko-systems-team.md` - チーム全体の定義
+
+個別メンバー:
+- `.claude/agents/tama-president.md` - タマ社長（マネージャー）
+- `.claude/agents/kuro-reviewer.md` - クロちゃん（レビュアー）
+- `.claude/agents/shiro-documenter.md` - シロちゃん（ドキュメンター）
+- `.claude/agents/tora-implementer.md` - トラちゃん（インプリメンター）
+- `.claude/agents/mike-header-generator.md` - ミケちゃん（ヘッダー画像デザイナー）
 
 ## プロジェクト固有の情報
 

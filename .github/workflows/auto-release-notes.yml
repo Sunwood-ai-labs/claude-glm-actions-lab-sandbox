@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -74,15 +76,21 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           HEADER_PATH="${{ steps.generate.outputs.header-path }}"
+          BRANCH_NAME="header-${{ steps.tag-info.outputs.tag }}"
 
           # Git設定
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # ヘッダー画像をコミット＆プッシュ
+          # ブランチを作成してチェックアウト
+          git checkout -b "${BRANCH_NAME}"
+
+          # ヘッダー画像をコミット
           git add "${HEADER_PATH}"
           git commit -m "chore: add header image for ${{ steps.tag-info.outputs.tag }} 🐱"
-          git push
+
+          # プッシュ
+          git push origin "${BRANCH_NAME}"
 
           echo "✅ Header image committed and pushed: ${HEADER_PATH}"
 

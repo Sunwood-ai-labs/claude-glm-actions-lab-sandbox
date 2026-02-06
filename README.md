@@ -108,24 +108,24 @@ export FAL_KEY='your-fal-ai-api-key'
 
 ### SVG ベクターモード
 
-`--mode svg` を指定すると、AI画像生成の代わりにSVGベクター画像を生成します。環境変数の設定は不要です。
+`--format svg` を指定すると、AI画像生成の代わりにSVGベクター画像を生成します。環境変数の設定は不要です。
 
 ```bash
 # 基本使い方
-curl -s https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/main/.github/scripts/generate-header.py | python3 - --mode svg --tag v1.0.0
+curl -s https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/main/.github/scripts/generate-header.py | python3 - --format svg --tag v1.0.0
 
 # パターンとカラーマップを指定
-curl -s https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/main/.github/scripts/generate-header.py | python3 - --mode svg --pattern dots --colormap sunset --tag v1.0.0
+curl -s https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/main/.github/scripts/generate-header.py | python3 - --format svg --pattern dots --colormap sunset --tag v1.0.0
 
 # ローカルで実行する場合
-python3 .github/scripts/generate-header.py --mode svg --pattern waves --colormap neon --tag v1.0.0
+python3 .github/scripts/generate-header.py --format svg --pattern waves --colormap neon --tag v1.0.0
 ```
 
 #### SVG モードのオプション
 
 | オプション | 説明 | デフォルト値 |
 |-----------|-------------|-------------|
-| `--mode` | 画像モード（`svg` または `fal`） | `fal` |
+| `--format` | 画像フォーマット（`svg` または `png`） | `png` |
 | `--pattern` | パターン（default/dots/waves/stripes/geometric） | `default` |
 | `--colormap` | カラーマップ（sunset/neon/ocean/forest/pastel） | 自動選択 |
 

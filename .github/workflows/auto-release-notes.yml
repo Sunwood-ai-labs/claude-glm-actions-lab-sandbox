@@ -61,7 +61,7 @@ jobs:
           # HEADER_MODE に応じて拡張子とモードを設定
           if [ "$HEADER_MODE" = "svg" ]; then
             HEADER_EXT="svg"
-            MODE_ARG="--mode svg"
+            MODE_ARG="--format svg"
             echo "🎨 Using SVG vector mode..."
           else
             HEADER_EXT="png"

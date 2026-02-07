@@ -216,7 +216,7 @@ jobs:
 
           # Issue本文テンプレートを作成（一重引用符で囲んで変数展開を防ぐ）
           cat > /tmp/issue-template.md << 'TEMPLATEEOF'
-          @claude リリースノートを生成してください。
+          リリースノートを生成してください。
 
           ## リリース情報
           - タグ名: `__CURRENT_TAG__`
@@ -297,7 +297,11 @@ jobs:
 
           echo "✅ Issue created: $ISSUE_URL"
 
-          # NOTE:
-          # We intentionally do NOT add an extra @claude comment here.
-          # The issue body already contains @claude, and a comment would cause double-trigger
-          # (issues:opened + issue_comment:created) and concurrency cancellations.
+          # Trigger Claude via comment to avoid issues:opened mode quirks and prevent double-trigger.
+          ISSUE_NUMBER=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
+          gh issue comment \
+            --repo "${GITHUB_REPOSITORY}" \
+            "$ISSUE_NUMBER" \
+            --body "@claude"
+
+          echo "✅ @claude comment added to trigger responder"

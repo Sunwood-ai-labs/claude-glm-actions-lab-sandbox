@@ -51,24 +51,43 @@ jobs:
           fetch-depth: 1
           path: .tmp/agents-repo
 
-      - name: Install Claude agents into user directory
+      - name: Install Claude agents + settings
         shell: bash
         run: |
           set -euo pipefail
 
           SRC_DIR=".tmp/agents-repo/.github/.claude/agents"
-          DEST_DIR="$HOME/.claude/agents"
+          USER_AGENTS_DIR="$HOME/.claude/agents"
+          USER_SETTINGS_FILE="$HOME/.claude/settings.json"
+          PROJECT_AGENTS_DIR=".claude/agents"
+          PROJECT_SETTINGS_FILE=".claude/settings.json"
 
           if [[ ! -d "$SRC_DIR" ]]; then
             echo "ERROR: Source agents directory not found: $SRC_DIR"
             exit 1
           fi
 
-          mkdir -p "$DEST_DIR"
-          # Copy agents from the checked out remote repository into the runner's user directory.
-          cp -a "$SRC_DIR/." "$DEST_DIR/"
-          echo "Installed agents:"
-          ls -la "$DEST_DIR"
+          # Install agent definitions to both user and project locations.
+          mkdir -p "$USER_AGENTS_DIR" "$PROJECT_AGENTS_DIR"
+          cp -a "$SRC_DIR/"*.md "$USER_AGENTS_DIR/"
+          cp -a "$SRC_DIR/"*.md "$PROJECT_AGENTS_DIR/"
+
+          # Install settings file where Claude Code expects it.
+          if [[ -f "$SRC_DIR/settings.json" ]]; then
+            mkdir -p "$(dirname "$USER_SETTINGS_FILE")" "$(dirname "$PROJECT_SETTINGS_FILE")"
+            cp -a "$SRC_DIR/settings.json" "$USER_SETTINGS_FILE"
+            cp -a "$SRC_DIR/settings.json" "$PROJECT_SETTINGS_FILE"
+          else
+            echo "WARN: settings.json not found in $SRC_DIR (agents installed, but no settings applied)."
+          fi
+
+          echo "Installed user agents:"
+          ls -la "$USER_AGENTS_DIR"
+          echo "Installed project agents:"
+          ls -la "$PROJECT_AGENTS_DIR"
+          if [[ -f "$PROJECT_SETTINGS_FILE" ]]; then
+            echo "Installed project settings: $PROJECT_SETTINGS_FILE"
+          fi
 
       # ★ここで「この実行が使うブランチ名」を決め打ちする
       - name: Compute branch name
@@ -88,6 +107,8 @@ jobs:
         continue-on-error: ${{ (github.event_name == 'issue_comment' || github.event_name == 'issues') && startsWith(github.event.issue.title, 'リリースノート生成:') }}
         with:
           trigger_phrase: "@claude"
+          # Ensure custom Claude Code settings (including agent teams) are applied.
+          settings: ".claude/settings.json"
 
           # ★ブランチ名を固定（タイムスタンプなし）
           branch_prefix: ""

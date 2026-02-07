@@ -123,10 +123,13 @@ jobs:
           echo "Using notes file: $NOTES_FILE"
           ls -la "$NOTES_FILE"
 
+          RELEASE_TITLE="🎉 ${TAG_NAME}"
+          echo "Release title: $RELEASE_TITLE"
+
           if gh release view "$TAG_NAME" >/dev/null 2>&1; then
-            gh release edit "$TAG_NAME" --title "$TAG_NAME" --notes-file "$NOTES_FILE"
+            gh release edit "$TAG_NAME" --title "$RELEASE_TITLE" --notes-file "$NOTES_FILE"
           else
-            gh release create "$TAG_NAME" --title "$TAG_NAME" --notes-file "$NOTES_FILE"
+            gh release create "$TAG_NAME" --title "$RELEASE_TITLE" --notes-file "$NOTES_FILE"
           fi
 
       # ★Issueからトリガーされた場合のみ、自動でPRを作成

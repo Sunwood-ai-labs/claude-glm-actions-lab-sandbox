@@ -257,7 +257,7 @@ jobs:
               <img src="https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/header-__CURRENT_TAG__/assets/release-headers/header-__CURRENT_TAG__.__HEADER_EXT__" alt="Header Image" />
             </div>
             <div align="center">
-              <h2>🎉 __CURRENT_TAG__ リリースノート</h2>
+              <h2>__CURRENT_TAG__ リリースノート</h2>
             </div>
             ```
           - **ヘッダー画像とタイトルの間に区切り線（`---` / `***`）は不要です**
